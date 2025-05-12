@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
 
       - name: Set up Bazel
         uses: bazelbuild/setup-bazelisk@v2
@@ -49,7 +49,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            bazel-bin/cmd/apply-retention-policy/apply-retention-policy_amd64_/apply-retention-policy_amd64
-            bazel-bin/cmd/apply-retention-policy/apply-retention-policy_arm64_/apply-retention-policy_arm64
+            bazel-bin/cmd/apply-retention-policy/apply-retention-policy_/apply-retention-policy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
