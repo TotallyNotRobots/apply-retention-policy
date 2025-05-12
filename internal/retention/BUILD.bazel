@@ -1,0 +1,26 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "retention",
+    srcs = ["policy.go"],
+    importpath = "github.com/TotallyNotRobots/apply-retention-policy/internal/retention",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//internal/config",
+        "//internal/file",
+        "//pkg/logger",
+        "@org_uber_go_zap//:zap",
+    ],
+)
+
+go_test(
+    name = "retention_test",
+    srcs = ["policy_test.go"],
+    embed = [":retention"],
+    deps = [
+        "//internal/config",
+        "//internal/file",
+        "//pkg/logger",
+        "@org_uber_go_zap//zaptest",
+    ],
+)

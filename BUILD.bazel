@@ -1,0 +1,21 @@
+load("@gazelle//:def.bzl", "gazelle")
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+# gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
+gazelle(name = "gazelle")
+
+# gazelle:lang go,gofmt,image
+
+go_library(
+    name = "apply-retention-policy_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/TotallyNotRobots/apply-retention-policy",
+    visibility = ["//visibility:private"],
+    deps = ["//cmd/apply-retention-policy"],
+)
+
+go_binary(
+    name = "apply-retention-policy",
+    embed = [":apply-retention-policy_lib"],
+    visibility = ["//visibility:public"],
+)

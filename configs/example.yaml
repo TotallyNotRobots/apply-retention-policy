@@ -1,0 +1,30 @@
+# Retention policy configuration
+retention:
+  # Keep the last 24 hourly backups
+  hourly: 24
+  # Keep the last 7 daily backups
+  daily: 7
+  # Keep the last 4 weekly backups
+  weekly: 4
+  # Keep the last 12 monthly backups
+  monthly: 12
+  # Keep the last 5 yearly backups
+  yearly: 5
+
+# File pattern to match backup files
+# The following placeholders are supported:
+# {year} - 4-digit year (e.g., 2024)
+# {month} - 2-digit month (01-12)
+# {day} - 2-digit day (01-31)
+# {hour} - 2-digit hour (00-23)
+# {minute} - 2-digit minute (00-59)
+file_pattern: "backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz"
+
+# Directory containing backup files
+directory: "/home/linuxdaemon/github.com/TotallyNotRobots/apply-retention-policy/testdata"
+
+# Log level (debug, info, warn, error)
+log_level: "info"
+
+# Dry run mode (true = show what would be deleted without actually deleting)
+dry_run: false

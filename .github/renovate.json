@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "matchManagers": ["bazel"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "bazel dependencies (non-major)"
+    }
+  ],
+  "bazel": {
+    "enabled": true,
+    "fileMatch": ["MODULE.bazel"]
+  }
+}

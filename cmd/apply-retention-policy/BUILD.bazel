@@ -1,0 +1,20 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "apply-retention-policy",
+    srcs = [
+        "prune.go",
+        "root.go",
+    ],
+    importpath = "github.com/TotallyNotRobots/apply-retention-policy/cmd/apply-retention-policy",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//internal/config",
+        "//internal/file",
+        "//internal/retention",
+        "//pkg/logger",
+        "@com_github_spf13_cobra//:cobra",
+        "@com_github_spf13_viper//:viper",
+        "@org_uber_go_zap//:zap",
+    ],
+)

@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "file",
+    srcs = ["manager.go"],
+    importpath = "github.com/TotallyNotRobots/apply-retention-policy/internal/file",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/logger",
+        "@org_uber_go_zap//:zap",
+    ],
+)
