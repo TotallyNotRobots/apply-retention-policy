@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -32,11 +33,11 @@ func NewManager(logger *logger.Logger, directory, pattern string) (*Manager, err
 	// Convert the pattern to a regex pattern
 	// Replace {year}, {month}, etc. with regex patterns
 	regexPattern := pattern
-	regexPattern = strings.ReplaceAll(regexPattern, "{year}", `(\d{4})`)
-	regexPattern = strings.ReplaceAll(regexPattern, "{month}", `(\d{2})`)
-	regexPattern = strings.ReplaceAll(regexPattern, "{day}", `(\d{2})`)
-	regexPattern = strings.ReplaceAll(regexPattern, "{hour}", `(\d{2})`)
-	regexPattern = strings.ReplaceAll(regexPattern, "{minute}", `(\d{2})`)
+	regexPattern = strings.ReplaceAll(regexPattern, "{year}", `(?P<year>\d{4})`)
+	regexPattern = strings.ReplaceAll(regexPattern, "{month}", `(?P<month>\d{2})`)
+	regexPattern = strings.ReplaceAll(regexPattern, "{day}", `(?P<day>\d{2})`)
+	regexPattern = strings.ReplaceAll(regexPattern, "{hour}", `(?P<hour>\d{2})`)
+	regexPattern = strings.ReplaceAll(regexPattern, "{minute}", `(?P<minute>\d{2})`)
 	regexPattern = "^" + regexPattern + "$"
 
 	compiledPattern, err := regexp.Compile(regexPattern)
@@ -77,7 +78,7 @@ func (m *Manager) ListFiles() ([]Info, error) {
 		}
 
 		// Parse the timestamp from the filename
-		timestamp, err := m.parseTimestamp(matches)
+		timestamp, err := m.parseTimestamp(matches, m.filePattern.SubexpNames())
 		if err != nil {
 			m.logger.Warn("failed to parse timestamp from filename",
 				zap.String("file", relPath),
@@ -129,20 +130,35 @@ func (m *Manager) DeleteFile(file Info, dryRun bool) error {
 }
 
 // parseTimestamp parses the timestamp from the regex matches
-func (m *Manager) parseTimestamp(matches []string) (time.Time, error) {
-	// The first match is the full string, so we start from index 1
-	// We expect the pattern to be: year, month, day, hour, minute
-	if len(matches) < 6 {
-		return time.Time{}, fmt.Errorf("invalid number of matches: %d", len(matches))
+func (m *Manager) parseTimestamp(matches []string, fieldNames []string) (time.Time, error) {
+	if len(matches) != len(fieldNames) {
+		return time.Time{}, fmt.Errorf("mismatch between matches and fieldNames: got %d matches, expected %d", len(matches), len(fieldNames))
 	}
 
-	year := matches[1]
-	month := matches[2]
-	day := matches[3]
-	hour := matches[4]
-	minute := matches[5]
+	year := "0000"
+	month := "01"
+	day := "01"
+	hour := "00"
+	minute := "00"
 
-	// Parse the timestamp
+	units := []struct {
+		name string
+		val  *string
+	}{
+		{"year", &year},
+		{"month", &month},
+		{"day", &day},
+		{"hour", &hour},
+		{"minute", &minute},
+	}
+
+	for _, unit := range units {
+		idx := slices.Index(fieldNames, unit.name)
+		if idx >= 0 {
+			*unit.val = matches[idx]
+		}
+	}
+
 	timestamp, err := time.Parse("2006-01-02-15-04",
 		fmt.Sprintf("%s-%s-%s-%s-%s", year, month, day, hour, minute))
 	if err != nil {

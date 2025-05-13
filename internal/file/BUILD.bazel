@@ -1,4 +1,4 @@
-load("@rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "file",
@@ -7,6 +7,17 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/logger",
+        "@org_uber_go_zap//:zap",
+    ],
+)
+
+go_test(
+    name = "file_test",
+    srcs = ["manager_test.go"],
+    embed = [":file"],
+    deps = [
+        "//pkg/logger",
+        "@com_github_stretchr_testify//assert",
         "@org_uber_go_zap//:zap",
     ],
 )
