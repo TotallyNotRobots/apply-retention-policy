@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/TotallyNotRobots/apply-retention-policy/cmd/apply-retention-policy"
+	"github.com/TotallyNotRobots/apply-retention-policy/cmd"
 )
 
 func main() {
-	apply_retention_policy.Execute()
+	cmd.Execute()
 }

@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// FileInfo represents a backup file with its parsed timestamp
-type FileInfo struct {
+// Info represents a backup file with its parsed timestamp
+type Info struct {
 	Path      string
 	Timestamp time.Time
 	Size      int64
@@ -52,8 +52,8 @@ func NewManager(logger *logger.Logger, directory, pattern string) (*Manager, err
 }
 
 // ListFiles returns a list of backup files sorted by timestamp
-func (m *Manager) ListFiles() ([]FileInfo, error) {
-	var files []FileInfo
+func (m *Manager) ListFiles() ([]Info, error) {
+	var files []Info
 
 	err := filepath.Walk(m.directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -85,7 +85,7 @@ func (m *Manager) ListFiles() ([]FileInfo, error) {
 			return nil
 		}
 
-		files = append(files, FileInfo{
+		files = append(files, Info{
 			Path:      path,
 			Timestamp: timestamp,
 			Size:      info.Size(),
@@ -107,7 +107,7 @@ func (m *Manager) ListFiles() ([]FileInfo, error) {
 }
 
 // DeleteFile deletes a file and logs the operation
-func (m *Manager) DeleteFile(file FileInfo, dryRun bool) error {
+func (m *Manager) DeleteFile(file Info, dryRun bool) error {
 	if dryRun {
 		m.logger.Info("would delete file (dry run)",
 			zap.String("file", file.Path),

@@ -5,24 +5,26 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+
+	"github.com/TotallyNotRobots/apply-retention-policy/internal/consts"
 )
 
 // RetentionPolicy defines how many backups to keep for each time period
 type RetentionPolicy struct {
-	Hourly  int `mapstructure:"hourly" yaml:"hourly"`
-	Daily   int `mapstructure:"daily" yaml:"daily"`
-	Weekly  int `mapstructure:"weekly" yaml:"weekly"`
+	Hourly  int `mapstructure:"hourly"  yaml:"hourly"`
+	Daily   int `mapstructure:"daily"   yaml:"daily"`
+	Weekly  int `mapstructure:"weekly"  yaml:"weekly"`
 	Monthly int `mapstructure:"monthly" yaml:"monthly"`
-	Yearly  int `mapstructure:"yearly" yaml:"yearly"`
+	Yearly  int `mapstructure:"yearly"  yaml:"yearly"`
 }
 
 // Config represents the application configuration
 type Config struct {
-	Retention   RetentionPolicy `mapstructure:"retention" yaml:"retention"`
+	Retention   RetentionPolicy `mapstructure:"retention"    yaml:"retention"`
 	FilePattern string          `mapstructure:"file_pattern" yaml:"file_pattern"`
-	Directory   string          `mapstructure:"directory" yaml:"directory"`
-	DryRun      bool            `mapstructure:"dry_run" yaml:"dry_run"`
-	LogLevel    string          `mapstructure:"log_level" yaml:"log_level"`
+	Directory   string          `mapstructure:"directory"    yaml:"directory"`
+	DryRun      bool            `mapstructure:"dry_run"      yaml:"dry_run"`
+	LogLevel    string          `mapstructure:"log_level"    yaml:"log_level"`
 }
 
 // LoadConfig loads the configuration from the specified file
@@ -87,28 +89,28 @@ func (c *Config) GetRetentionDuration() time.Duration {
 	maxDuration := time.Duration(0)
 
 	if c.Retention.Yearly > 0 {
-		maxDuration = time.Duration(c.Retention.Yearly) * 365 * 24 * time.Hour
+		maxDuration = time.Duration(c.Retention.Yearly) * consts.YEAR
 	}
 	if c.Retention.Monthly > 0 {
-		duration := time.Duration(c.Retention.Monthly) * 30 * 24 * time.Hour
+		duration := time.Duration(c.Retention.Monthly) * consts.MONTH
 		if duration > maxDuration {
 			maxDuration = duration
 		}
 	}
 	if c.Retention.Weekly > 0 {
-		duration := time.Duration(c.Retention.Weekly) * 7 * 24 * time.Hour
+		duration := time.Duration(c.Retention.Weekly) * consts.WEEK
 		if duration > maxDuration {
 			maxDuration = duration
 		}
 	}
 	if c.Retention.Daily > 0 {
-		duration := time.Duration(c.Retention.Daily) * 24 * time.Hour
+		duration := time.Duration(c.Retention.Daily) * consts.DAY
 		if duration > maxDuration {
 			maxDuration = duration
 		}
 	}
 	if c.Retention.Hourly > 0 {
-		duration := time.Duration(c.Retention.Hourly) * time.Hour
+		duration := time.Duration(c.Retention.Hourly) * consts.HOUR
 		if duration > maxDuration {
 			maxDuration = duration
 		}

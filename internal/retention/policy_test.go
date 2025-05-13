@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap/zaptest"
+
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestPolicy_Apply(t *testing.T) {
@@ -17,7 +18,7 @@ func TestPolicy_Apply(t *testing.T) {
 	}
 
 	type args struct {
-		files []file.FileInfo
+		files []file.Info
 		now   time.Time
 	}
 
@@ -25,7 +26,7 @@ func TestPolicy_Apply(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []file.FileInfo
+		want    []file.Info
 		wantErr bool
 	}{
 		{
@@ -41,7 +42,7 @@ func TestPolicy_Apply(t *testing.T) {
 				FilePattern: "",
 				Directory:   "",
 			}},
-			args{[]file.FileInfo{}, time.Date(2025, 5, 5, 15, 43, 23, 0, time.UTC)},
+			args{[]file.Info{}, time.Date(2025, 5, 5, 15, 43, 23, 0, time.UTC)},
 			nil,
 			false,
 		},
@@ -57,7 +58,7 @@ func TestPolicy_Apply(t *testing.T) {
 				},
 			}},
 			args{
-				[]file.FileInfo{
+				[]file.Info{
 					// Hourly
 					{
 						Timestamp: time.Date(2025, 5, 5, 15, 43, 0, 0, time.UTC),
@@ -138,7 +139,7 @@ func TestPolicy_Apply(t *testing.T) {
 				},
 			}},
 			args{
-				[]file.FileInfo{
+				[]file.Info{
 					// Hourly
 					{
 						Timestamp: time.Date(2025, 5, 5, 15, 43, 0, 0, time.UTC),
@@ -222,7 +223,7 @@ func TestPolicy_Apply(t *testing.T) {
 				},
 			}},
 			args{
-				[]file.FileInfo{
+				[]file.Info{
 					// Hourly
 					{
 						Timestamp: time.Date(2025, 5, 5, 15, 43, 0, 0, time.UTC),
@@ -294,7 +295,7 @@ func TestPolicy_Apply(t *testing.T) {
 				},
 				time.Date(2025, 5, 5, 15, 43, 23, 0, time.UTC),
 			},
-			[]file.FileInfo{
+			[]file.Info{
 				{
 					Timestamp: time.Date(2025, 5, 5, 10, 43, 0, 0, time.UTC),
 				},

@@ -47,6 +47,14 @@ func (l *Logger) Sync() error {
 	return l.Logger.Sync()
 }
 
+// MustSync flushes any buffered log entries, and panics on any error
+func (l *Logger) MustSync() {
+	err := l.Logger.Sync()
+	if err != nil {
+		panic(err)
+	}
+}
+
 // Fatal logs a message at Fatal level and then calls os.Exit(1)
 func (l *Logger) Fatal(msg string, fields ...zap.Field) {
 	l.Logger.Fatal(msg, fields...)

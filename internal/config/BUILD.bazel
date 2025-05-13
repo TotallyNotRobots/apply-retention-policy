@@ -6,6 +6,7 @@ go_library(
     importpath = "github.com/TotallyNotRobots/apply-retention-policy/internal/config",
     visibility = ["//visibility:public"],
     deps = [
+        "//internal/consts",
         "@com_github_spf13_viper//:viper",
     ],
 )

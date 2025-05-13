@@ -19,19 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package apply_retention_policy
+package cmd
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
+
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/retention"
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/util"
 )
 
 // pruneCmd represents the prune command
@@ -41,7 +43,7 @@ var pruneCmd = &cobra.Command{
 	Long: `Apply retention policy to backup files based on the configured policy.
 The policy specifies how many hourly, daily, weekly, monthly, and yearly backups to retain.
 Files that don't meet the retention policy will be deleted.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		// Load configuration
 		cfg, err := config.LoadConfig(cfgFile)
 		if err != nil {
@@ -53,7 +55,7 @@ Files that don't meet the retention policy will be deleted.`,
 		if err != nil {
 			return fmt.Errorf("failed to initialize logger: %w", err)
 		}
-		defer log.Sync()
+		defer log.MustSync()
 
 		// Initialize file manager
 		fileManager, err := file.NewManager(log, cfg.Directory, cfg.FilePattern)
@@ -100,10 +102,11 @@ func init() {
 	rootCmd.AddCommand(pruneCmd)
 
 	// Add flags
-	pruneCmd.Flags().BoolP("dry-run", "d", false, "Show what would be deleted without actually deleting")
+	pruneCmd.Flags().
+		BoolP("dry-run", "d", false, "Show what would be deleted without actually deleting")
 	pruneCmd.Flags().StringP("log-level", "l", "info", "Log level (debug, info, warn, error)")
 
 	// Bind flags to config
-	viper.BindPFlag("dry_run", pruneCmd.Flags().Lookup("dry-run"))
-	viper.BindPFlag("log_level", pruneCmd.Flags().Lookup("log-level"))
+	util.Must(viper.BindPFlag("dry_run", pruneCmd.Flags().Lookup("dry-run")))
+	util.Must(viper.BindPFlag("log_level", pruneCmd.Flags().Lookup("log-level")))
 }

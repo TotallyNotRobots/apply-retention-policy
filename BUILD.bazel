@@ -4,14 +4,14 @@ load("@rules_go//go:def.bzl", "go_binary", "go_library")
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
 gazelle(name = "gazelle")
 
-# gazelle:lang go,gofmt,image
+# gazelle:lang go,gofmt
 
 go_library(
     name = "apply-retention-policy_lib",
     srcs = ["main.go"],
     importpath = "github.com/TotallyNotRobots/apply-retention-policy",
     visibility = ["//visibility:private"],
-    deps = ["//cmd/apply-retention-policy"],
+    deps = ["//cmd"],
 )
 
 go_binary(

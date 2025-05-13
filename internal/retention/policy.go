@@ -4,10 +4,12 @@ import (
 	"slices"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
+	"github.com/TotallyNotRobots/apply-retention-policy/internal/consts"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
-	"go.uber.org/zap"
 )
 
 // Policy implements the retention policy logic
@@ -25,27 +27,52 @@ func NewPolicy(logger *logger.Logger, config *config.Config) *Policy {
 }
 
 // Apply applies the retention policy to the given files
-func (p *Policy) Apply(files []file.FileInfo, now time.Time) ([]file.FileInfo, error) {
+func (p *Policy) Apply(files []file.Info, now time.Time) ([]file.Info, error) {
 	if len(files) == 0 {
 		return nil, nil
 	}
 
-	var toDelete []file.FileInfo
+	var toDelete []file.Info
 
 	// Group files by time period
-	hourlyFiles, pruned, files := p.groupFilesByPeriod(files, now, time.Hour, p.config.Retention.Hourly)
+	hourlyFiles, pruned, files := p.groupFilesByPeriod(
+		files,
+		now,
+		consts.HOUR,
+		p.config.Retention.Hourly,
+	)
 	toDelete = append(toDelete, pruned...)
 
-	dailyFiles, pruned, files := p.groupFilesByPeriod(files, now, 24*time.Hour, p.config.Retention.Daily)
+	dailyFiles, pruned, files := p.groupFilesByPeriod(
+		files,
+		now,
+		consts.DAY,
+		p.config.Retention.Daily,
+	)
 	toDelete = append(toDelete, pruned...)
 
-	weeklyFiles, pruned, files := p.groupFilesByPeriod(files, now, 7*24*time.Hour, p.config.Retention.Weekly)
+	weeklyFiles, pruned, files := p.groupFilesByPeriod(
+		files,
+		now,
+		consts.WEEK,
+		p.config.Retention.Weekly,
+	)
 	toDelete = append(toDelete, pruned...)
 
-	monthlyFiles, pruned, files := p.groupFilesByPeriod(files, now, 30*24*time.Hour, p.config.Retention.Monthly)
+	monthlyFiles, pruned, files := p.groupFilesByPeriod(
+		files,
+		now,
+		consts.MONTH,
+		p.config.Retention.Monthly,
+	)
 	toDelete = append(toDelete, pruned...)
 
-	yearlyFiles, pruned, files := p.groupFilesByPeriod(files, now, 365*24*time.Hour, p.config.Retention.Yearly)
+	yearlyFiles, pruned, files := p.groupFilesByPeriod(
+		files,
+		now,
+		consts.YEAR,
+		p.config.Retention.Yearly,
+	)
 	toDelete = append(toDelete, pruned...)
 
 	// All extra files should be pruned
@@ -65,11 +92,16 @@ func (p *Policy) Apply(files []file.FileInfo, now time.Time) ([]file.FileInfo, e
 }
 
 // groupFilesByPeriod groups files by the specified time period
-func (p *Policy) groupFilesByPeriod(files []file.FileInfo, now time.Time, period time.Duration, keepCount int) ([]file.FileInfo, []file.FileInfo, []file.FileInfo) {
-	var groups [][]file.FileInfo
-	currentGroup := []file.FileInfo{}
+func (p *Policy) groupFilesByPeriod(
+	files []file.Info,
+	now time.Time,
+	period time.Duration,
+	keepCount int,
+) ([]file.Info, []file.Info, []file.Info) {
+	var groups [][]file.Info
+	currentGroup := []file.Info{}
 
-	slices.SortFunc(files, func(a, b file.FileInfo) int {
+	slices.SortFunc(files, func(a, b file.Info) int {
 		return b.Timestamp.Compare(a.Timestamp)
 	})
 
@@ -84,7 +116,7 @@ func (p *Policy) groupFilesByPeriod(files []file.FileInfo, now time.Time, period
 				groups = append(groups, currentGroup)
 			}
 
-			currentGroup = []file.FileInfo{f}
+			currentGroup = []file.Info{f}
 		}
 	}
 
@@ -93,9 +125,9 @@ func (p *Policy) groupFilesByPeriod(files []file.FileInfo, now time.Time, period
 		groups = append(groups, currentGroup)
 	}
 
-	selected := []file.FileInfo{}
-	unselected := []file.FileInfo{}
-	toDelete := []file.FileInfo{}
+	selected := []file.Info{}
+	unselected := []file.Info{}
+	toDelete := []file.Info{}
 
 	for _, group := range groups {
 		if len(selected) == keepCount {
