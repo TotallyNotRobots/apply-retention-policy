@@ -3,13 +3,10 @@ linters:
   enable:
     - bodyclose
     - copyloopvar
-    - depguard
     - dogsled
     - dupl
     - errorlint
-    - funlen
     - gocheckcompilerdirectives
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
@@ -29,64 +26,11 @@ linters:
     - unconvert
     - unparam
     - whitespace
-  settings:
-    dupl:
-      threshold: 100
-    errorlint:
-      asserts: false
-    funlen:
-      lines: -1
-      statements: 50
-    goconst:
-      min-len: 2
-      min-occurrences: 3
-    gocritic:
-      enabled-tags:
-        - diagnostic
-        - experimental
-        - opinionated
-        - performance
-        - style
-    gocyclo:
-      min-complexity: 15
-    godox:
-      keywords:
-        - FIXME
-    govet:
-      enable:
-        - nilness
-        - shadow
-    lll:
-      line-length: 140
-    mnd:
-      checks:
-        - argument
-        - case
-        - condition
-        - return
-      ignored-numbers:
-        - "0"
-        - "1"
-        - "2"
-        - "3"
-      ignored-functions:
-        - strings.SplitN
-    nolintlint:
-      require-explanation: true
-      require-specific: true
-      allow-unused: false
-    revive:
-      rules:
-        - name: indent-error-flow
-        - name: unexported-return
-        - name: unused-parameter
-        - name: unused-receiver
   exclusions:
     generated: lax
     presets:
       - comments
       - common-false-positives
-      - legacy
       - std-error-handling
     rules:
       - linters:
@@ -102,6 +46,7 @@ formatters:
   enable:
     - gofmt
     - goimports
+    - golines
   settings:
     gofmt:
       rewrite-rules:
@@ -109,7 +54,7 @@ formatters:
           replacement: any
     goimports:
       local-prefixes:
-        - github.com/TotallyNotRobots/go-sys-manager
+        - github.com/TotallyNotRobots/apply-retention-policy
   exclusions:
     generated: lax
     paths:
