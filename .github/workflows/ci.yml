@@ -13,6 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Bazel cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/bazel
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: bazel-cache-${{ runner.os }}-
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -20,6 +27,13 @@ jobs:
 
       - name: Set up Bazel
         uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Restore Bazel cache (if available)
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/bazel
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: bazel-cache-${{ runner.os }}-
 
       - name: Run tests
         run: bazel test //...
@@ -37,6 +51,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Bazel cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/bazel
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: bazel-cache-${{ runner.os }}-
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -45,6 +66,13 @@ jobs:
       - name: Set up Bazel
         uses: bazelbuild/setup-bazelisk@v3
 
+      - name: Restore Bazel cache (if available)
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/bazel
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: bazel-cache-${{ runner.os }}-
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -52,4 +80,4 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build multi-arch image
-        run: bazel build //cmd/apply-retention-policy:image
+        run: bazel build //:image

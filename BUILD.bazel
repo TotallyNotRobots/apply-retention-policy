@@ -1,5 +1,7 @@
 load("@gazelle//:def.bzl", "gazelle")
 load("@rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_oci//oci:defs.bzl", "oci_push", "oci_image", "oci_image_index")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
 gazelle(name = "gazelle")
@@ -18,4 +20,44 @@ go_binary(
     name = "apply-retention-policy",
     embed = [":apply-retention-policy_lib"],
     visibility = ["//visibility:public"],
+)
+
+# Create a tarball of the binary
+pkg_tar(
+    name = "binary_tar",
+    srcs = [":apply-retention-policy"],
+    mode = "0o755",
+    package_dir = "/usr/local/bin",
+)
+
+# Create the container image for amd64
+oci_image(
+    name = "image_amd64",
+    base = "@distroless_base_amd64",
+    tars = [":binary_tar"],
+    entrypoint = ["/usr/local/bin/apply-retention-policy"],
+)
+
+# Create the container image for arm64
+oci_image(
+    name = "image_arm64",
+    base = "@distroless_base_arm64",
+    tars = [":binary_tar"],
+    entrypoint = ["/usr/local/bin/apply-retention-policy"],
+)
+
+# Create a multi-arch image index
+oci_image_index(
+    name = "image",
+    images = [
+        ":image_amd64",
+        ":image_arm64",
+    ],
+)
+
+# Push target for the container image
+oci_push(
+    name = "push",
+    image = ":image",
+    repository = "ghcr.io/totallynotrobots/apply-retention-policy",
 )

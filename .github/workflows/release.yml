@@ -15,6 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Bazel cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/bazel
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: bazel-cache-${{ runner.os }}-
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -22,6 +29,13 @@ jobs:
 
       - name: Set up Bazel
         uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Restore Bazel cache (if available)
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/bazel
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: bazel-cache-${{ runner.os }}-
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -42,13 +56,13 @@ jobs:
 
       - name: Build and push multi-arch image
         run: |
-          bazel run //cmd/apply-retention-policy:push -- --tag=${{ steps.get_version.outputs.VERSION }}
-          bazel run //cmd/apply-retention-policy:push -- --tag=latest
+          bazel run //:push -- --tag=${{ steps.get_version.outputs.VERSION }}
+          bazel run //:push -- --tag=latest
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            bazel-bin/cmd/apply-retention-policy/apply-retention-policy_/apply-retention-policy
+            bazel-bin/apply-retention-policy_/apply-retention-policy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

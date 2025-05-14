@@ -79,11 +79,11 @@ Example: `backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz`
 ### Building
 
 ```bash
-# Build binary
-bazel build //cmd/apply-retention-policy
+# Build binary (using the root target)
+bazel build //:apply-retention-policy
 
-# Build Docker image
-bazel run //cmd/apply-retention-policy:image
+# Build multi-arch container image (using the root target)
+bazel build //:image
 ```
 
 ### Testing
