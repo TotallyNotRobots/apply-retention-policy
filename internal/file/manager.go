@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
 
 // Info represents a backup file with its parsed timestamp
@@ -132,7 +133,11 @@ func (m *Manager) DeleteFile(file Info, dryRun bool) error {
 // parseTimestamp parses the timestamp from the regex matches
 func (m *Manager) parseTimestamp(matches []string, fieldNames []string) (time.Time, error) {
 	if len(matches) != len(fieldNames) {
-		return time.Time{}, fmt.Errorf("mismatch between matches and fieldNames: got %d matches, expected %d", len(matches), len(fieldNames))
+		return time.Time{}, fmt.Errorf(
+			"mismatch between matches and fieldNames: got %d matches, expected %d",
+			len(matches),
+			len(fieldNames),
+		)
 	}
 
 	year := "0000"
