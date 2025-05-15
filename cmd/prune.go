@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -44,6 +45,9 @@ var pruneCmd = &cobra.Command{
 The policy specifies how many hourly, daily, weekly, monthly, and yearly backups to retain.
 Files that don't meet the retention policy will be deleted.`,
 	RunE: func(_ *cobra.Command, _ []string) error {
+		// Create context
+		ctx := context.Background()
+
 		// Load configuration
 		cfg, err := config.LoadConfig(cfgFile)
 		if err != nil {
@@ -58,13 +62,13 @@ Files that don't meet the retention policy will be deleted.`,
 		defer log.MustSync()
 
 		// Initialize file manager
-		fileManager, err := file.NewManager(log, cfg.Directory, cfg.FilePattern)
+		fileManager, err := file.NewManager(cfg.Directory, cfg.FilePattern, file.WithLogger(log))
 		if err != nil {
 			return fmt.Errorf("failed to initialize file manager: %w", err)
 		}
 
 		// List files
-		files, err := fileManager.ListFiles()
+		files, err := fileManager.ListFiles(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to list files: %w", err)
 		}
@@ -87,7 +91,7 @@ Files that don't meet the retention policy will be deleted.`,
 
 		// Delete files
 		for _, file := range toDelete {
-			if err := fileManager.DeleteFile(file, cfg.DryRun); err != nil {
+			if err := fileManager.DeleteFile(ctx, file, cfg.DryRun); err != nil {
 				log.Error("failed to delete file",
 					zap.String("file", file.Path),
 					zap.Error(err))

@@ -1,6 +1,8 @@
 package file
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,12 +17,23 @@ import (
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
 
+// Common errors
+var (
+	ErrInvalidPattern = errors.New("invalid file pattern")
+	ErrListFiles      = errors.New("failed to list files")
+	ErrParseTimestamp = errors.New("failed to parse timestamp")
+	ErrDeleteFile     = errors.New("failed to delete file")
+)
+
 // Info represents a backup file with its parsed timestamp
 type Info struct {
 	Path      string
 	Timestamp time.Time
 	Size      int64
 }
+
+// ManagerOption is a function that configures a Manager
+type ManagerOption func(*Manager)
 
 // Manager handles file operations for the retention policy
 type Manager struct {
@@ -29,8 +42,15 @@ type Manager struct {
 	filePattern *regexp.Regexp
 }
 
+// WithLogger sets the logger for the Manager
+func WithLogger(logger *logger.Logger) ManagerOption {
+	return func(m *Manager) {
+		m.logger = logger
+	}
+}
+
 // NewManager creates a new file manager
-func NewManager(logger *logger.Logger, directory, pattern string) (*Manager, error) {
+func NewManager(directory, pattern string, opts ...ManagerOption) (*Manager, error) {
 	// Convert the pattern to a regex pattern
 	// Replace {year}, {month}, etc. with regex patterns
 	regexPattern := pattern
@@ -43,26 +63,48 @@ func NewManager(logger *logger.Logger, directory, pattern string) (*Manager, err
 
 	compiledPattern, err := regexp.Compile(regexPattern)
 	if err != nil {
-		return nil, fmt.Errorf("invalid file pattern: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalidPattern, err)
 	}
 
-	return &Manager{
-		logger:      logger,
+	// Create manager with default values
+	m := &Manager{
+		logger:      &logger.Logger{Logger: zap.NewNop()}, // Default no-op logger
 		directory:   directory,
 		filePattern: compiledPattern,
-	}, nil
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(m)
+	}
+
+	return m, nil
 }
 
 // ListFiles returns a list of backup files sorted by timestamp
-func (m *Manager) ListFiles() ([]Info, error) {
+func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
+	// Check for context cancellation first
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	var files []Info
 
-	err := filepath.Walk(m.directory, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(m.directory, func(path string, d os.DirEntry, err error) error {
+		// Check for context cancellation
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		if err != nil {
 			return err
 		}
 
-		if info.IsDir() {
+		if d.IsDir() {
 			return nil
 		}
 
@@ -75,6 +117,15 @@ func (m *Manager) ListFiles() ([]Info, error) {
 		// Check if the file matches our pattern
 		matches := m.filePattern.FindStringSubmatch(relPath)
 		if matches == nil {
+			return nil
+		}
+
+		// Get file info for size
+		info, err := d.Info()
+		if err != nil {
+			m.logger.Warn("failed to get file info",
+				zap.String("file", relPath),
+				zap.Error(err))
 			return nil
 		}
 
@@ -97,7 +148,7 @@ func (m *Manager) ListFiles() ([]Info, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to list files: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrListFiles, err)
 	}
 
 	// Sort files by timestamp (newest first)
@@ -109,7 +160,14 @@ func (m *Manager) ListFiles() ([]Info, error) {
 }
 
 // DeleteFile deletes a file and logs the operation
-func (m *Manager) DeleteFile(file Info, dryRun bool) error {
+func (m *Manager) DeleteFile(ctx context.Context, file Info, dryRun bool) error {
+	// Check for context cancellation
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	if dryRun {
 		m.logger.Info("would delete file (dry run)",
 			zap.String("file", file.Path),
@@ -119,7 +177,7 @@ func (m *Manager) DeleteFile(file Info, dryRun bool) error {
 	}
 
 	if err := os.Remove(file.Path); err != nil {
-		return fmt.Errorf("failed to delete file %s: %w", file.Path, err)
+		return fmt.Errorf("%w %s: %w", ErrDeleteFile, file.Path, err)
 	}
 
 	m.logger.Info("deleted file",
@@ -134,40 +192,39 @@ func (m *Manager) DeleteFile(file Info, dryRun bool) error {
 func (m *Manager) parseTimestamp(matches []string, fieldNames []string) (time.Time, error) {
 	if len(matches) != len(fieldNames) {
 		return time.Time{}, fmt.Errorf(
-			"mismatch between matches and fieldNames: got %d matches, expected %d",
+			"%w: mismatch between matches and fieldNames: got %d matches, expected %d",
+			ErrParseTimestamp,
 			len(matches),
 			len(fieldNames),
 		)
 	}
 
-	year := "0000"
-	month := "01"
-	day := "01"
-	hour := "00"
-	minute := "00"
-
-	units := []struct {
-		name string
-		val  *string
-	}{
-		{"year", &year},
-		{"month", &month},
-		{"day", &day},
-		{"hour", &hour},
-		{"minute", &minute},
+	// Prepare default values
+	parts := map[string]string{
+		"year":   "0000",
+		"month":  "01",
+		"day":    "01",
+		"hour":   "00",
+		"minute": "00",
 	}
 
-	for _, unit := range units {
-		idx := slices.Index(fieldNames, unit.name)
-		if idx >= 0 {
-			*unit.val = matches[idx]
+	// Fill values from matches
+	for field, defaultVal := range parts {
+		if idx := slices.Index(fieldNames, field); idx >= 0 {
+			parts[field] = matches[idx]
+		} else {
+			parts[field] = defaultVal
 		}
 	}
 
-	timestamp, err := time.Parse("2006-01-02-15-04",
-		fmt.Sprintf("%s-%s-%s-%s-%s", year, month, day, hour, minute))
+	// Format timestamp string
+	timestampStr := fmt.Sprintf("%s-%s-%s-%s-%s",
+		parts["year"], parts["month"], parts["day"], parts["hour"], parts["minute"])
+
+	// Parse the timestamp
+	timestamp, err := time.Parse("2006-01-02-15-04", timestampStr)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse timestamp: %w", err)
+		return time.Time{}, fmt.Errorf("%w: %w", ErrParseTimestamp, err)
 	}
 
 	return timestamp, nil
