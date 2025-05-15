@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache Bazel cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/bazel
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
@@ -31,7 +31,7 @@ jobs:
         uses: bazelbuild/setup-bazelisk@v3
 
       - name: Restore Bazel cache (if available)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/bazel
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
