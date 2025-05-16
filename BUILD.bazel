@@ -1,6 +1,6 @@
 load("@gazelle//:def.bzl", "gazelle")
 load("@rules_go//go:def.bzl", "go_binary", "go_library")
-load("@rules_oci//oci:defs.bzl", "oci_push", "oci_image", "oci_image_index")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
@@ -34,16 +34,16 @@ pkg_tar(
 oci_image(
     name = "image_amd64",
     base = "@distroless_base_amd64",
-    tars = [":binary_tar"],
     entrypoint = ["/usr/local/bin/apply-retention-policy"],
+    tars = [":binary_tar"],
 )
 
 # Create the container image for arm64
 oci_image(
     name = "image_arm64",
     base = "@distroless_base_arm64",
-    tars = [":binary_tar"],
     entrypoint = ["/usr/local/bin/apply-retention-policy"],
+    tars = [":binary_tar"],
 )
 
 # Create a multi-arch image index
