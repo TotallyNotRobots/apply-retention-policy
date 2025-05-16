@@ -1,0 +1,6 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+Always use the existing Bazel configuration where possible, preferring newer, up-to-date syntax and functions.
