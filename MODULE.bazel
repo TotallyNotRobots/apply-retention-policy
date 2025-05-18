@@ -17,7 +17,7 @@ use_repo(go_deps, "com_github_spf13_cobra", "com_github_spf13_viper", "com_githu
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
     name = "distroless_base_amd64",
-    digest = "sha256:e14f4c00d388743628c674d88e44ac51895d7bc074a37e805eaf141cdbfa5ff1",
+    digest = "sha256:d9f9472a8f4541368192d714a995eb1a99bab1f7071fc8bde261d7eda3b667d8",
     image = "gcr.io/distroless/static-debian12",
 )
 oci.pull(
