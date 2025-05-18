@@ -60,7 +60,7 @@ jobs:
           bazel run //:push -- --tag=latest
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             bazel-bin/apply-retention-policy_/apply-retention-policy
