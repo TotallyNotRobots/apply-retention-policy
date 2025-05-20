@@ -1,4 +1,4 @@
-load("@rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "cmd",
@@ -17,5 +17,16 @@ go_library(
         "@com_github_spf13_cobra//:cobra",
         "@com_github_spf13_viper//:viper",
         "@org_uber_go_zap//:zap",
+    ],
+)
+
+go_test(
+    name = "cmd_test",
+    srcs = ["prune_test.go"],
+    embed = [":cmd"],
+    deps = [
+        "@com_github_spf13_viper//:viper",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
     ],
 )

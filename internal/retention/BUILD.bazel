@@ -20,8 +20,11 @@ go_test(
     embed = [":retention"],
     deps = [
         "//internal/config",
+        "//internal/consts",
         "//internal/file",
         "//pkg/logger",
-        "@org_uber_go_zap//zaptest",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+        "@org_uber_go_zap//:zap",
     ],
 )

@@ -28,7 +28,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
-	"github.com/TotallyNotRobots/apply-retention-policy/internal/consts"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
@@ -47,8 +46,77 @@ func NewPolicy(logger *logger.Logger, config *config.Config) *Policy {
 	}
 }
 
+// weekMultiplier is used to combine year and week numbers into a single integer
+// by multiplying the year by 100 and adding the week number
+const weekMultiplier = 100
+
+// grouper functions for different time periods
+var (
+	// hourGrouper groups files by hour
+	hourGrouper = func(f file.Info) int64 {
+		return time.Date(
+			f.Timestamp.Year(),
+			f.Timestamp.Month(),
+			f.Timestamp.Day(),
+			f.Timestamp.Hour(),
+			0,
+			0,
+			0,
+			f.Timestamp.Location(),
+		).Unix()
+	}
+
+	// dayGrouper groups files by day
+	dayGrouper = func(f file.Info) int64 {
+		return time.Date(
+			f.Timestamp.Year(),
+			f.Timestamp.Month(),
+			f.Timestamp.Day(),
+			0,
+			0,
+			0,
+			0,
+			f.Timestamp.Location(),
+		).Unix()
+	}
+
+	// weekGrouper groups files by ISO week
+	weekGrouper = func(f file.Info) int {
+		year, week := f.Timestamp.ISOWeek()
+		return (year * weekMultiplier) + week
+	}
+
+	// monthGrouper groups files by month
+	monthGrouper = func(f file.Info) int64 {
+		return time.Date(
+			f.Timestamp.Year(),
+			f.Timestamp.Month(),
+			1,
+			0,
+			0,
+			0,
+			0,
+			f.Timestamp.Location(),
+		).Unix()
+	}
+
+	// yearGrouper groups files by year
+	yearGrouper = func(f file.Info) int64 {
+		return time.Date(
+			f.Timestamp.Year(),
+			1,
+			1,
+			0,
+			0,
+			0,
+			0,
+			f.Timestamp.Location(),
+		).Unix()
+	}
+)
+
 // Apply applies the retention policy to the given files
-func (p *Policy) Apply(files []file.Info, now time.Time) ([]file.Info, error) {
+func (p *Policy) Apply(files []file.Info) ([]file.Info, error) {
 	if len(files) == 0 {
 		return nil, nil
 	}
@@ -56,42 +124,37 @@ func (p *Policy) Apply(files []file.Info, now time.Time) ([]file.Info, error) {
 	var toDelete []file.Info
 
 	// Group files by time period
-	hourlyFiles, pruned, files := p.groupFilesByPeriod(
+	hourlyFiles, pruned, files := groupFilesByPeriod(
 		files,
-		now,
-		consts.HOUR,
+		hourGrouper,
 		p.config.Retention.Hourly,
 	)
 	toDelete = append(toDelete, pruned...)
 
-	dailyFiles, pruned, files := p.groupFilesByPeriod(
+	dailyFiles, pruned, files := groupFilesByPeriod(
 		files,
-		now,
-		consts.DAY,
+		dayGrouper,
 		p.config.Retention.Daily,
 	)
 	toDelete = append(toDelete, pruned...)
 
-	weeklyFiles, pruned, files := p.groupFilesByPeriod(
+	weeklyFiles, pruned, files := groupFilesByPeriod(
 		files,
-		now,
-		consts.WEEK,
+		weekGrouper,
 		p.config.Retention.Weekly,
 	)
 	toDelete = append(toDelete, pruned...)
 
-	monthlyFiles, pruned, files := p.groupFilesByPeriod(
+	monthlyFiles, pruned, files := groupFilesByPeriod(
 		files,
-		now,
-		consts.MONTH,
+		monthGrouper,
 		p.config.Retention.Monthly,
 	)
 	toDelete = append(toDelete, pruned...)
 
-	yearlyFiles, pruned, files := p.groupFilesByPeriod(
+	yearlyFiles, pruned, files := groupFilesByPeriod(
 		files,
-		now,
-		consts.YEAR,
+		yearGrouper,
 		p.config.Retention.Yearly,
 	)
 	toDelete = append(toDelete, pruned...)
@@ -112,13 +175,13 @@ func (p *Policy) Apply(files []file.Info, now time.Time) ([]file.Info, error) {
 	return toDelete, nil
 }
 
-// groupFilesByPeriod groups files by the specified time period
-func (p *Policy) groupFilesByPeriod(
+// groupFilesByTimePeriod groups files into time periods based on the given duration.
+// Files are sorted by timestamp in descending order and grouped by their time period.
+// Returns a slice of file groups, where each group contains files from the same time period.
+func groupFilesByTimePeriod[T comparable](
 	files []file.Info,
-	now time.Time,
-	period time.Duration,
-	keepCount int,
-) ([]file.Info, []file.Info, []file.Info) {
+	grouper func(file.Info) T,
+) [][]file.Info {
 	var groups [][]file.Info
 	currentGroup := []file.Info{}
 
@@ -129,14 +192,13 @@ func (p *Policy) groupFilesByPeriod(
 	for _, f := range files {
 		// If this is the first file or it's in the same period as the previous file
 		if len(currentGroup) == 0 ||
-			(now.Sub(f.Timestamp)/period) == (now.Sub(currentGroup[0].Timestamp)/period) {
+			grouper(f) == grouper(currentGroup[0]) {
 			currentGroup = append(currentGroup, f)
 		} else {
 			// Start a new group
 			if len(currentGroup) > 0 {
 				groups = append(groups, currentGroup)
 			}
-
 			currentGroup = []file.Info{f}
 		}
 	}
@@ -145,6 +207,17 @@ func (p *Policy) groupFilesByPeriod(
 	if len(currentGroup) > 0 {
 		groups = append(groups, currentGroup)
 	}
+
+	return groups
+}
+
+// groupFilesByPeriod groups files by the specified time period
+func groupFilesByPeriod[T comparable](
+	files []file.Info,
+	grouper func(file.Info) T,
+	keepCount int,
+) ([]file.Info, []file.Info, []file.Info) {
+	groups := groupFilesByTimePeriod(files, grouper)
 
 	selected := []file.Info{}
 	unselected := []file.Info{}

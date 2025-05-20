@@ -1,0 +1,243 @@
+package config
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestLoadConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a test config file
+	configContent := `
+retention:
+  hourly: 2
+  daily: 3
+  weekly: 2
+  monthly: 2
+  yearly: 1
+file_pattern: "backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz"
+directory: "/backups"
+dry_run: true
+log_level: "debug"
+`
+	configFile := filepath.Join(tmpDir, "retention-policy.yaml")
+	err := os.WriteFile(configFile, []byte(configContent), 0600)
+	require.NoError(t, err)
+
+	t.Run("load from file", func(t *testing.T) {
+		cfg, err := LoadConfig(configFile)
+		require.NoError(t, err)
+		assert.NotNil(t, cfg)
+
+		// Verify config values
+		assert.Equal(t, 2, cfg.Retention.Hourly)
+		assert.Equal(t, 3, cfg.Retention.Daily)
+		assert.Equal(t, 2, cfg.Retention.Weekly)
+		assert.Equal(t, 2, cfg.Retention.Monthly)
+		assert.Equal(t, 1, cfg.Retention.Yearly)
+		assert.Equal(t, "backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz", cfg.FilePattern)
+		assert.Equal(t, "/backups", cfg.Directory)
+		assert.True(t, cfg.DryRun)
+		assert.Equal(t, "debug", cfg.LogLevel)
+	})
+
+	t.Run("load from default locations", func(t *testing.T) {
+		// Create config in current directory
+		err = os.WriteFile("retention-policy.yaml", []byte(configContent), 0600)
+		require.NoError(t, err)
+		defer os.Remove("retention-policy.yaml")
+
+		cfg, err := LoadConfig("")
+		require.NoError(t, err)
+		assert.NotNil(t, cfg)
+		assert.Equal(t, "backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz", cfg.FilePattern)
+	})
+
+	t.Run("invalid config file", func(t *testing.T) {
+		_, err := LoadConfig("non-existent.yaml")
+		require.Error(t, err)
+	})
+
+	t.Run("invalid yaml", func(t *testing.T) {
+		invalidConfig := filepath.Join(tmpDir, "invalid.yaml")
+		err = os.WriteFile(invalidConfig, []byte("invalid: yaml: content"), 0600)
+		require.NoError(t, err)
+
+		_, err := LoadConfig(invalidConfig)
+		require.Error(t, err)
+	})
+}
+
+func TestConfig_Validate(t *testing.T) {
+	t.Run("valid config", func(t *testing.T) {
+		cfg := &Config{
+			Retention: RetentionPolicy{
+				Hourly:  2,
+				Daily:   3,
+				Weekly:  2,
+				Monthly: 2,
+				Yearly:  1,
+			},
+			FilePattern: "backup-{year}-{month}-{day}.tar.gz",
+			Directory:   "/backups",
+		}
+
+		err := cfg.Validate()
+		assert.NoError(t, err)
+	})
+
+	t.Run("negative retention values", func(t *testing.T) {
+		testCases := []struct {
+			name  string
+			cfg   *Config
+			field string
+		}{
+			{
+				name: "negative hourly",
+				cfg: &Config{
+					Retention:   RetentionPolicy{Hourly: -1},
+					FilePattern: "backup.tar.gz",
+					Directory:   "/backups",
+				},
+				field: "hourly",
+			},
+			{
+				name: "negative daily",
+				cfg: &Config{
+					Retention:   RetentionPolicy{Daily: -1},
+					FilePattern: "backup.tar.gz",
+					Directory:   "/backups",
+				},
+				field: "daily",
+			},
+			{
+				name: "negative weekly",
+				cfg: &Config{
+					Retention:   RetentionPolicy{Weekly: -1},
+					FilePattern: "backup.tar.gz",
+					Directory:   "/backups",
+				},
+				field: "weekly",
+			},
+			{
+				name: "negative monthly",
+				cfg: &Config{
+					Retention:   RetentionPolicy{Monthly: -1},
+					FilePattern: "backup.tar.gz",
+					Directory:   "/backups",
+				},
+				field: "monthly",
+			},
+			{
+				name: "negative yearly",
+				cfg: &Config{
+					Retention:   RetentionPolicy{Yearly: -1},
+					FilePattern: "backup.tar.gz",
+					Directory:   "/backups",
+				},
+				field: "yearly",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				err := tc.cfg.Validate()
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.field)
+			})
+		}
+	})
+
+	t.Run("missing required fields", func(t *testing.T) {
+		testCases := []struct {
+			name string
+			cfg  *Config
+			msg  string
+		}{
+			{
+				name: "missing file pattern",
+				cfg: &Config{
+					Retention: RetentionPolicy{Hourly: 1},
+					Directory: "/backups",
+				},
+				msg: "file pattern must be specified",
+			},
+			{
+				name: "missing directory",
+				cfg: &Config{
+					Retention:   RetentionPolicy{Hourly: 1},
+					FilePattern: "backup.tar.gz",
+				},
+				msg: "directory must be specified",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				err := tc.cfg.Validate()
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.msg)
+			})
+		}
+	})
+}
+
+func TestConfig_GetRetentionDuration(t *testing.T) {
+	t.Run("all periods set", func(t *testing.T) {
+		cfg := &Config{
+			Retention: RetentionPolicy{
+				Hourly:  2,
+				Daily:   3,
+				Weekly:  2,
+				Monthly: 2,
+				Yearly:  1,
+			},
+		}
+
+		duration := cfg.GetRetentionDuration()
+		// Yearly retention should be the longest
+		assert.Equal(t, 365*24*time.Hour, duration)
+	})
+
+	t.Run("only hourly set", func(t *testing.T) {
+		cfg := &Config{
+			Retention: RetentionPolicy{
+				Hourly: 48, // 2 days
+			},
+		}
+
+		duration := cfg.GetRetentionDuration()
+		assert.Equal(t, 48*time.Hour, duration)
+	})
+
+	t.Run("no retention set", func(t *testing.T) {
+		cfg := &Config{
+			Retention: RetentionPolicy{},
+		}
+
+		duration := cfg.GetRetentionDuration()
+		assert.Equal(t, time.Duration(0), duration)
+	})
+
+	t.Run("mixed periods", func(t *testing.T) {
+		cfg := &Config{
+			Retention: RetentionPolicy{
+				Hourly:  24, // 1 day
+				Daily:   7,  // 7 days
+				Weekly:  2,  // 14 days
+				Monthly: 1,  // ~30 days
+				Yearly:  0,  // not set
+			},
+		}
+
+		duration := cfg.GetRetentionDuration()
+		// Monthly retention should be the longest
+		assert.Equal(t, 30*24*time.Hour, duration)
+	})
+}

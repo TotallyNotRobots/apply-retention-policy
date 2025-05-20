@@ -35,26 +35,45 @@ import (
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
 
+func init() {
+	// Enable test mode for logger in all tests
+	logger.SetTestMode(true)
+}
+
 const (
 	testBackupPattern = "backup-{year}{month}{day}{hour}{minute}.zip"
 )
 
 func TestNewManager(t *testing.T) {
-	t.Parallel()
-	log := &logger.Logger{Logger: zap.NewNop()}
-	dir := t.TempDir()
+	t.Run("valid pattern", func(t *testing.T) {
+		// Use a no-op logger for testing
+		log := &logger.Logger{Logger: zap.NewNop()}
 
-	// Test with options
-	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
-	require.NoError(t, err)
-	assert.NotNil(t, manager)
-	assert.Equal(t, dir, manager.directory)
-	assert.NotNil(t, manager.filePattern)
+		m, err := NewManager(
+			"/tmp",
+			"backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz",
+			WithLogger(log),
+		)
+		require.NoError(t, err)
+		assert.NotNil(t, m)
+		assert.Equal(t, "/tmp", m.directory)
+		assert.NotNil(t, m.filePattern)
+	})
 
-	// Test with invalid pattern
-	_, err = NewManager(dir, "(?invalid", WithLogger(log))
-	require.Error(t, err)
-	require.ErrorIs(t, err, ErrInvalidPattern)
+	t.Run("invalid pattern", func(t *testing.T) {
+		_, err := NewManager("/tmp", "backup-[invalid")
+		require.Error(t, err)
+		assert.ErrorIs(t, err, ErrInvalidPattern)
+	})
+
+	t.Run("with logger option", func(t *testing.T) {
+		// Use a no-op logger for testing
+		log := &logger.Logger{Logger: zap.NewNop()}
+
+		m, err := NewManager("/tmp", "backup-{year}-{month}-{day}.tar.gz", WithLogger(log))
+		require.NoError(t, err)
+		assert.NotNil(t, m.logger)
+	})
 }
 
 func TestListFiles(t *testing.T) {

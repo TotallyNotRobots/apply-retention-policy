@@ -1,2 +1,5 @@
 # Enable Bzlmod for every Bazel command
 common --enable_bzlmod
+
+test --verbose_failures
+test --test_output=errors

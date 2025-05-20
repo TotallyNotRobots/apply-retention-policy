@@ -24,7 +24,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,9 +43,13 @@ var pruneCmd = &cobra.Command{
 	Long: `Apply retention policy to backup files based on the configured policy.
 The policy specifies how many hourly, daily, weekly, monthly, and yearly backups to retain.
 Files that don't meet the retention policy will be deleted.`,
-	RunE: func(_ *cobra.Command, _ []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		// Create context
-		ctx := context.Background()
+		ctx := cmd.Context()
+
+		if ctx == nil {
+			ctx = context.Background()
+		}
 
 		// Load configuration
 		cfg, err := config.LoadConfig(cfgFile)
@@ -84,7 +87,7 @@ Files that don't meet the retention policy will be deleted.`,
 		policy := retention.NewPolicy(log, cfg)
 
 		// Apply retention policy
-		toDelete, err := policy.Apply(files, time.Now())
+		toDelete, err := policy.Apply(files)
 		if err != nil {
 			return fmt.Errorf("failed to apply retention policy: %w", err)
 		}
@@ -109,6 +112,7 @@ func init() {
 	pruneCmd.Flags().
 		BoolP("dry-run", "d", false, "Show what would be deleted without actually deleting")
 	pruneCmd.Flags().StringP("log-level", "l", "info", "Log level (debug, info, warn, error)")
+	pruneCmd.Flags().StringVarP(&cfgFile, "config", "c", "", "Path to config file")
 
 	// Bind flags to config
 	util.Must(viper.BindPFlag("dry_run", pruneCmd.Flags().Lookup("dry-run")))

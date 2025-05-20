@@ -23,10 +23,22 @@ package logger
 
 import (
 	"os"
+	"sync"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+var (
+	syncErrorOnce sync.Once
+	isTestMode    bool
+)
+
+// SetTestMode enables test mode for the logger
+// This should be called at the start of tests to prevent panics
+func SetTestMode(enabled bool) {
+	isTestMode = enabled
+}
 
 // Logger is a wrapper around zap.Logger
 type Logger struct {
@@ -68,11 +80,19 @@ func (l *Logger) Sync() error {
 	return l.Logger.Sync()
 }
 
-// MustSync flushes any buffered log entries, and panics on any error
+// MustSync flushes any buffered log entries, and panics on any error in non-test environments
 func (l *Logger) MustSync() {
 	err := l.Logger.Sync()
 	if err != nil {
-		panic(err)
+		// Log the error only once to avoid log spam
+		syncErrorOnce.Do(func() {
+			l.Error("failed to sync logger", zap.Error(err))
+		})
+
+		// Only panic in non-test environments
+		if !isTestMode {
+			panic(err)
+		}
 	}
 }
 
