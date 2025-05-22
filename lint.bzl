@@ -20,40 +20,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-version: "2"
-run:
-  concurrency: 4
-linters:
-  enable:
-    - gosec
-    - misspell
-    - revive
-  exclusions:
-    generated: lax
-    rules:
-      - path: (.+)\.go$
-        text: bazel-.*
-      - path: (.+)\.go$
-        text: \.bazel/.*
-      - path: (.+)\.go$
-        text: \.bazel-bin/.*
-      - path: (.+)\.go$
-        text: \.bazel-out/.*
-      - path: (.+)\.go$
-        text: \.bazel-testlogs/.*
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-formatters:
-  enable:
-    - gofmt
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+"""Macro for defining a module-level golangci-lint test target."""
+
+def module_lint_test(name = "lint"):
+    """Defines a golangci-lint test target for the entire Go module.
+
+    Args:
+        name: The name of the test target (defaults to "lint").
+    """
+    native.sh_test(
+        name = name,
+        srcs = ["//:lint.sh"],
+        data = [
+            "@golangci_lint//:bin/golangci-lint",
+            "//:.golangci.yml",
+            "//:go.mod",
+            "//:go.sum",
+        ],
+        tags = ["lint"],
+    )

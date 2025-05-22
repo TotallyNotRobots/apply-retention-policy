@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "https://golangci-lint.run/jsonschema/golangci.v2.jsonschema.json": "file:///home/linuxdaemon/github.com/TotallyNotRobots/apply-retention-policy/.golangci.yml"
+    }
+}

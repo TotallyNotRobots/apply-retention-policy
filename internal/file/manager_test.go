@@ -97,13 +97,14 @@ func TestListFiles(t *testing.T) {
 		"backup-202501030000.zip",
 	}
 	for _, file := range files {
-		path := filepath.Join(dir, file)
+		// In test context, we control the path and it's safe to use
+		path := filepath.Clean(filepath.Join(dir, file))
 		_, err := os.Create(path)
 		require.NoError(t, err)
 	}
 
 	// Also create a non-matching file
-	nonMatchingFile := filepath.Join(dir, "not-a-backup.txt")
+	nonMatchingFile := filepath.Clean(filepath.Join(dir, "not-a-backup.txt"))
 	_, err = os.Create(nonMatchingFile)
 	require.NoError(t, err)
 
@@ -134,7 +135,8 @@ func TestDeleteFile(t *testing.T) {
 
 	// Create a test file
 	file := "backup-202501010000.zip"
-	path := filepath.Join(dir, file)
+	// In test context, we control the path and it's safe to use
+	path := filepath.Clean(filepath.Join(dir, file))
 	_, err = os.Create(path)
 	require.NoError(t, err)
 

@@ -20,11 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+// Package consts provides common constants used throughout the application.
 package consts
 
 import "time"
 
+// Common time constants used for retention policy calculations
 const (
+	// HOUR represents one hour in duration
 	HOUR  = time.Hour
 	DAY   = 24 * HOUR
 	WEEK  = 7 * DAY

@@ -1,0 +1,8 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Always Offer Run Commands
+
+Always offer to run commands (or any other tool calls) for the user so that they can confirm or adjust them.

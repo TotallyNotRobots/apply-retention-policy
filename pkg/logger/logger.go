@@ -19,6 +19,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+// Package logger provides logging functionality for the application.
+// It implements a structured logging interface using zap.
 package logger
 
 import (
@@ -43,6 +46,11 @@ func SetTestMode(enabled bool) {
 // Logger is a wrapper around zap.Logger
 type Logger struct {
 	*zap.Logger
+}
+
+// Error logs a message at Error level
+func (l *Logger) Error(msg string, fields ...zap.Field) {
+	l.Logger.Error(msg, fields...)
 }
 
 // New creates a new logger with the specified log level

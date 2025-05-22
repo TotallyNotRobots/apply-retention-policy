@@ -1,5 +1,10 @@
 load("@rules_go//go:def.bzl", "go_library")
 
+# Export source files for linting
+exports_files([
+    "consts.go",
+], visibility = ["//visibility:public"])
+
 go_library(
     name = "consts",
     srcs = ["consts.go"],

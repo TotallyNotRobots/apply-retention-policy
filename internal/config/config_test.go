@@ -51,7 +51,11 @@ log_level: "debug"
 		// Create config in current directory
 		err = os.WriteFile("retention-policy.yaml", []byte(configContent), 0600)
 		require.NoError(t, err)
-		defer os.Remove("retention-policy.yaml")
+		defer func() {
+			if err := os.Remove("retention-policy.yaml"); err != nil {
+				t.Errorf("Failed to remove test file: %v", err)
+			}
+		}()
 
 		cfg, err := LoadConfig("")
 		require.NoError(t, err)

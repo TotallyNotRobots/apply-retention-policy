@@ -1,5 +1,11 @@
 load("@rules_go//go:def.bzl", "go_library", "go_test")
 
+# Export source files for linting
+exports_files([
+    "manager.go",
+    "manager_test.go",
+], visibility = ["//visibility:public"])
+
 go_library(
     name = "file",
     srcs = ["manager.go"],
@@ -15,6 +21,7 @@ go_test(
     name = "file_test",
     srcs = ["manager_test.go"],
     embed = [":file"],
+    visibility = ["//visibility:public"],
     deps = [
         "//pkg/logger",
         "@com_github_stretchr_testify//assert",

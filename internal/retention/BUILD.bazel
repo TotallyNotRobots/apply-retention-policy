@@ -17,6 +17,7 @@ go_test(
     name = "retention_test",
     srcs = ["policy_test.go"],
     embed = [":retention"],
+    visibility = ["//visibility:public"],
     deps = [
         "//internal/config",
         "//internal/file",
