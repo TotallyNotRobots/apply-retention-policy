@@ -41,8 +41,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 	"golang.org/x/sys/unix"
+
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
 
 // Common errors
@@ -126,6 +127,7 @@ func NewManager(
 
 // isRegularFile checks if the file is a regular file and the current user has write access
 func (m *Manager) isRegularFile(path string) error {
+	// Get file info
 	info, err := os.Lstat(path)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrDeleteFile, err)
@@ -138,10 +140,12 @@ func (m *Manager) isRegularFile(path string) error {
 
 	// Check if we have write permission using os.Access
 	// This properly handles group and other permissions
-	if err := unix.Access(path, unix.W_OK); err != nil {
+	err = unix.Access(path, unix.W_OK)
+	if err != nil {
 		return fmt.Errorf("%w: no write permission for %s", ErrAccessDenied, path)
 	}
 
+	// All checks passed
 	return nil
 }
 
@@ -159,10 +163,11 @@ func (m *Manager) DeleteFile(
 	}
 
 	if dryRun {
-		m.logger.Info("would delete file (dry run)",
-			zap.String("file", file.Path),
+		m.logger.Info("dry run: would delete file",
+			zap.String("path", file.Path),
 			zap.Time("timestamp", file.Timestamp),
-			zap.Int64("size", file.Size))
+			zap.Int64("size", file.Size),
+		)
 
 		return nil
 	}
@@ -172,15 +177,18 @@ func (m *Manager) DeleteFile(
 		return err
 	}
 
+	// Delete the file
 	if err := os.Remove(file.Path); err != nil {
 		return fmt.Errorf("%w %s: %w", ErrDeleteFile, file.Path, err)
 	}
 
+	// Log the successful deletion
 	m.logger.Info("deleted file",
 		zap.String("file", file.Path),
 		zap.Time("timestamp", file.Timestamp),
 		zap.Int64("size", file.Size))
 
+	// Return success
 	return nil
 }
 
@@ -230,6 +238,7 @@ func (m *Manager) processFile(
 		m.logger.Debug("skipping non-regular file",
 			zap.String("file", relPath),
 			zap.String("mode", info.Mode().String()))
+
 		return nil
 	}
 
@@ -270,6 +279,7 @@ func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
 
 		return m.processFile(ctx, path, d, &files)
 	})
+
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrListFiles, err)
 	}

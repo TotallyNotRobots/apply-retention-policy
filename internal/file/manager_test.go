@@ -31,6 +31,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -50,13 +51,18 @@ func init() {
 
 const (
 	testBackupPattern = "backup-{year}{month}{day}{hour}{minute}.zip"
+	platformWindows   = "windows"
+	platformDarwin    = "darwin"
+	platformLinux     = "linux"
 )
 
 // checkACLSupport checks if the system supports ACLs
 func checkACLSupport(t *testing.T) bool {
 	// Try to get ACL support via statfs
 	var stat unix.Statfs_t
+
 	err := unix.Statfs(".", &stat)
+
 	if err != nil {
 		t.Skip("Cannot check ACL support:", err)
 		return false
@@ -71,19 +77,15 @@ func checkACLSupport(t *testing.T) bool {
 }
 
 // checkSymlinkSupport checks if the system supports symlinks
-func checkSymlinkSupport(t *testing.T) bool {
-	if runtime.GOOS == "windows" {
-		// On Windows, check if we have symlink privileges
-		// This is a basic check - in practice, you might need to check
-		// for specific Windows versions or user privileges
-		return true // We'll let the symlink creation fail if not supported
-	}
+func checkSymlinkSupport() bool {
+	// On Windows, symlinks require special privileges
+	// We'll let the symlink creation fail if not supported
 	return true
 }
 
 // checkFIFOSupport checks if the system supports named pipes (FIFOs)
 func checkFIFOSupport(t *testing.T) bool {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == platformWindows {
 		// Windows supports named pipes but with different semantics
 		// We'll skip the test on Windows for now
 		t.Skip("Named pipes test not implemented for Windows")
@@ -93,6 +95,7 @@ func checkFIFOSupport(t *testing.T) bool {
 	// Try to create a temporary FIFO
 	dir := t.TempDir()
 	pipePath := filepath.Join(dir, "testpipe")
+
 	err := syscall.Mkfifo(pipePath, 0644)
 	if err != nil {
 		t.Log("FIFO not supported:", err)
@@ -101,33 +104,44 @@ func checkFIFOSupport(t *testing.T) bool {
 
 	// Clean up the test FIFO
 	_ = os.Remove(pipePath)
+
 	return true
 }
 
 // setReadOnly makes a file read-only in a platform-independent way
 func setReadOnly(t *testing.T, path string) {
-	if runtime.GOOS == "windows" {
-		// On Windows, use attrib command
-		cmd := exec.Command("attrib", "+R", path)
+	cleanPath := filepath.Clean(path)
+
+	if runtime.GOOS == platformWindows {
+		// On Windows, use attrib command with fixed arguments
+		cmd := exec.Command("attrib", "+R")
+		cmd.Args = append(cmd.Args, cleanPath)
 		err := cmd.Run()
+
 		require.NoError(t, err, "Failed to set read-only attribute on Windows")
 	} else {
 		// On Unix-like systems, use chmod
-		err := os.Chmod(path, 0444)
+		err := os.Chmod(cleanPath, 0444)
+
 		require.NoError(t, err, "Failed to set read-only mode")
 	}
 }
 
 // removeReadOnly removes read-only attribute in a platform-independent way
 func removeReadOnly(t *testing.T, path string) {
-	if runtime.GOOS == "windows" {
-		// On Windows, use attrib command
-		cmd := exec.Command("attrib", "-R", path)
+	cleanPath := filepath.Clean(path)
+
+	if runtime.GOOS == platformWindows {
+		// On Windows, use attrib command with fixed arguments
+		cmd := exec.Command("attrib", "-R")
+		cmd.Args = append(cmd.Args, cleanPath)
 		err := cmd.Run()
+
 		require.NoError(t, err, "Failed to remove read-only attribute on Windows")
 	} else {
 		// On Unix-like systems, use chmod
-		err := os.Chmod(path, 0644)
+		err := os.Chmod(cleanPath, 0644)
+
 		require.NoError(t, err, "Failed to remove read-only mode")
 	}
 }
@@ -142,6 +156,7 @@ func TestNewManager(t *testing.T) {
 			"backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz",
 			WithLogger(log),
 		)
+
 		require.NoError(t, err)
 		assert.NotNil(t, m)
 		assert.Equal(t, "/tmp", m.directory)
@@ -174,7 +189,9 @@ func TestListFiles(t *testing.T) {
 	ctx := context.Background()
 	log := &logger.Logger{Logger: zap.NewNop()}
 	dir := t.TempDir()
+
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+
 	require.NoError(t, err)
 
 	// Create test files
@@ -183,36 +200,44 @@ func TestListFiles(t *testing.T) {
 		"backup-202501020000.zip",
 		"backup-202501030000.zip",
 	}
+
 	for _, file := range files {
 		path := filepath.Clean(filepath.Join(dir, file))
 		_, err = os.Create(path)
+
 		require.NoError(t, err)
 	}
 
 	// Create a directory
 	dirPath := filepath.Join(dir, "subdir")
 	err = os.Mkdir(dirPath, 0755)
+
 	require.NoError(t, err)
 
 	t.Run("with symlink", func(t *testing.T) {
-		if !checkSymlinkSupport(t) {
+		if !checkSymlinkSupport() {
 			t.Skip("Symlinks not supported on this system")
 		}
 
 		// Create a symlink
 		symlinkPath := filepath.Join(dir, "symlink")
 		err = os.Symlink(filepath.Join(dir, files[0]), symlinkPath)
+
 		if err != nil {
-			if runtime.GOOS == "windows" {
+			if runtime.GOOS == platformWindows {
 				t.Skip("Symlink creation failed on Windows - may need elevated privileges")
 			}
+
 			require.NoError(t, err)
 		}
 
 		// List files and verify symlink is not included
-		list, err := manager.ListFiles(ctx)
-		require.NoError(t, err)
+		list, listErr := manager.ListFiles(ctx)
+
+		require.NoError(t, listErr)
+
 		assert.Len(t, list, len(files))
+
 		for _, file := range list {
 			base := filepath.Base(file.Path)
 			assert.Contains(t, files, base)
@@ -231,14 +256,16 @@ func TestListFiles(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify the pipe exists and is a FIFO
-		pipeInfo, err := os.Lstat(pipePath)
-		require.NoError(t, err)
+		pipeInfo, pipeErr := os.Lstat(pipePath)
+		require.NoError(t, pipeErr)
 		require.True(t, pipeInfo.Mode()&os.ModeNamedPipe != 0, "Created path is not a named pipe")
 
 		// List files and verify the pipe is not included
-		list, err := manager.ListFiles(ctx)
-		require.NoError(t, err)
+		list, listErr := manager.ListFiles(ctx)
+		require.NoError(t, listErr)
+
 		assert.Len(t, list, len(files))
+
 		for _, file := range list {
 			base := filepath.Base(file.Path)
 			assert.Contains(t, files, base)
@@ -251,11 +278,12 @@ func TestListFiles(t *testing.T) {
 	})
 
 	// Execute
-	list, err := manager.ListFiles(ctx)
+	list, listErr := manager.ListFiles(ctx)
 
 	// Verify
-	require.NoError(t, err)
+	require.NoError(t, listErr)
 	assert.Len(t, list, len(files))
+
 	for _, file := range list {
 		base := filepath.Base(file.Path)
 		assert.Contains(t, files, base)
@@ -276,13 +304,16 @@ func TestDeleteFile(t *testing.T) {
 	ctx := context.Background()
 	log := &logger.Logger{Logger: zap.NewNop()}
 	dir := t.TempDir()
+
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+
 	require.NoError(t, err)
 
 	// Create a test file
 	file := "backup-202501010000.zip"
 	path := filepath.Clean(filepath.Join(dir, file))
 	_, err = os.Create(path)
+
 	require.NoError(t, err)
 
 	info := Info{
@@ -327,46 +358,50 @@ func TestDeleteFile(t *testing.T) {
 	})
 
 	t.Run("delete symlink", func(t *testing.T) {
-		if !checkSymlinkSupport(t) {
+		if !checkSymlinkSupport() {
 			t.Skip("Symlinks not supported on this system")
 		}
 
 		// Create a target file first
 		targetPath := filepath.Join(dir, "target.zip")
 		_, err = os.Create(targetPath)
+
 		require.NoError(t, err)
 
 		// Create a symlink to the target file
 		symlinkPath := filepath.Join(dir, "symlink")
 		err = os.Symlink(targetPath, symlinkPath)
+
 		if err != nil {
-			if runtime.GOOS == "windows" {
+			if runtime.GOOS == platformWindows {
 				t.Skip("Symlink creation failed on Windows - may need elevated privileges")
 			}
+
 			require.NoError(t, err)
 		}
 
 		// Verify the symlink exists and is a symlink
-		linkInfo, err := os.Lstat(symlinkPath)
-		require.NoError(t, err)
-		if runtime.GOOS == "windows" {
-			// On Windows, check for reparse point
-			require.True(t, linkInfo.Mode()&os.ModeSymlink != 0, "Created path is not a symlink")
-		} else {
-			require.True(t, linkInfo.Mode()&os.ModeSymlink != 0, "Created path is not a symlink")
-		}
+		linkInfo, linkErr := os.Lstat(symlinkPath)
+
+		require.NoError(t, linkErr)
+
+		// On Windows, check for reparse point
+		require.True(t, linkInfo.Mode()&os.ModeSymlink != 0, "Created path is not a symlink")
 
 		symlinkInfo := Info{
 			Path:      symlinkPath,
 			Timestamp: time.Now(),
 			Size:      0,
 		}
+
 		err = manager.DeleteFile(ctx, symlinkInfo, false)
+
 		require.Error(t, err)
 		require.ErrorIs(t, err, ErrNotRegularFile)
 
 		// Verify the symlink still exists (since we shouldn't delete it)
 		_, err = os.Lstat(symlinkPath)
+
 		require.NoError(t, err, "Symlink was unexpectedly deleted")
 	})
 
@@ -449,10 +484,6 @@ func TestDeleteFile(t *testing.T) {
 		gid := os.Getgid()
 
 		// Create ACL entries
-		// Note: This is a simplified test. In a real system, you'd need to:
-		// 1. Get the current user's groups
-		// 2. Create appropriate ACL entries for those groups
-		// 3. Handle different ACL types (ACCESS, DEFAULT, etc.)
 		aclEntries := []string{
 			fmt.Sprintf("user:%d:rw-", uid),  // Give current user rw-
 			fmt.Sprintf("group:%d:r--", gid), // Give current group r--
@@ -460,12 +491,15 @@ func TestDeleteFile(t *testing.T) {
 			"other::r--",                     // Others get r--
 		}
 
-		// Set ACL using setfacl command
-		// Note: This requires the acl package and setfacl command to be available
-		cmd := exec.Command("setfacl", append([]string{"-m"}, aclEntries...)...)
-		cmd.Args = append(cmd.Args, aclPath)
-		if err := cmd.Run(); err != nil {
-			t.Skip("setfacl command not available or failed:", err)
+		// Set ACL using setfacl command with fixed arguments
+		cmd := exec.Command("setfacl", "-m")
+		cmd.Args = append(cmd.Args, strings.Join(aclEntries, ","))
+		cmd.Args = append(cmd.Args, filepath.Clean(aclPath))
+
+		runErr := cmd.Run()
+
+		if runErr != nil {
+			t.Skip("setfacl command not available or failed:", runErr)
 		}
 
 		aclInfo := Info{
@@ -505,11 +539,15 @@ func TestDeleteFile(t *testing.T) {
 			"other::r--",                    // Others get r--
 		}
 
-		// Set ACL using setfacl command
-		cmd := exec.Command("setfacl", append([]string{"-m"}, aclEntries...)...)
-		cmd.Args = append(cmd.Args, aclPath)
-		if err := cmd.Run(); err != nil {
-			t.Skip("setfacl command not available or failed:", err)
+		// Set ACL using setfacl command with fixed arguments
+		cmd := exec.Command("setfacl", "-m")
+		cmd.Args = append(cmd.Args, strings.Join(aclEntries, ","))
+		cmd.Args = append(cmd.Args, filepath.Clean(aclPath))
+
+		runErr := cmd.Run()
+
+		if runErr != nil {
+			t.Skip("setfacl command not available or failed:", runErr)
 		}
 
 		aclInfo := Info{
