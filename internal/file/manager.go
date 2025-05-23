@@ -42,6 +42,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
+	"golang.org/x/sys/unix"
 )
 
 // Common errors
@@ -50,6 +51,8 @@ var (
 	ErrListFiles      = errors.New("failed to list files")
 	ErrParseTimestamp = errors.New("failed to parse timestamp")
 	ErrDeleteFile     = errors.New("failed to delete file")
+	ErrNotRegularFile = errors.New("not a regular file")
+	ErrAccessDenied   = errors.New("access denied")
 )
 
 // Info represents a backup file with its parsed timestamp
@@ -121,6 +124,66 @@ func NewManager(
 	return m, nil
 }
 
+// isRegularFile checks if the file is a regular file and the current user has write access
+func (m *Manager) isRegularFile(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrDeleteFile, err)
+	}
+
+	// Check if it's a regular file
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("%w: %s is not a regular file", ErrNotRegularFile, path)
+	}
+
+	// Check if we have write permission using os.Access
+	// This properly handles group and other permissions
+	if err := unix.Access(path, unix.W_OK); err != nil {
+		return fmt.Errorf("%w: no write permission for %s", ErrAccessDenied, path)
+	}
+
+	return nil
+}
+
+// DeleteFile deletes a file and logs the operation
+func (m *Manager) DeleteFile(
+	ctx context.Context,
+	file Info,
+	dryRun bool,
+) error {
+	// Check for context cancellation
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	if dryRun {
+		m.logger.Info("would delete file (dry run)",
+			zap.String("file", file.Path),
+			zap.Time("timestamp", file.Timestamp),
+			zap.Int64("size", file.Size))
+
+		return nil
+	}
+
+	// Verify file safety before deletion
+	if err := m.isRegularFile(file.Path); err != nil {
+		return err
+	}
+
+	if err := os.Remove(file.Path); err != nil {
+		return fmt.Errorf("%w %s: %w", ErrDeleteFile, file.Path, err)
+	}
+
+	m.logger.Info("deleted file",
+		zap.String("file", file.Path),
+		zap.Time("timestamp", file.Timestamp),
+		zap.Int64("size", file.Size))
+
+	return nil
+}
+
 // processFile processes a single file and adds it to the files slice if it matches the pattern
 func (m *Manager) processFile(
 	ctx context.Context,
@@ -135,7 +198,8 @@ func (m *Manager) processFile(
 	default:
 	}
 
-	if d.IsDir() {
+	// Skip directories and symlinks
+	if d.IsDir() || d.Type()&os.ModeSymlink != 0 {
 		return nil
 	}
 
@@ -151,13 +215,21 @@ func (m *Manager) processFile(
 		return nil
 	}
 
-	// Get file info for size
+	// Get file info for size and type
 	info, err := d.Info()
 	if err != nil {
 		m.logger.Warn("failed to get file info",
 			zap.String("file", relPath),
 			zap.Error(err))
 
+		return nil
+	}
+
+	// Skip if not a regular file
+	if !info.Mode().IsRegular() {
+		m.logger.Debug("skipping non-regular file",
+			zap.String("file", relPath),
+			zap.String("mode", info.Mode().String()))
 		return nil
 	}
 
@@ -208,40 +280,6 @@ func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
 	})
 
 	return files, nil
-}
-
-// DeleteFile deletes a file and logs the operation
-func (m *Manager) DeleteFile(
-	ctx context.Context,
-	file Info,
-	dryRun bool,
-) error {
-	// Check for context cancellation
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-
-	if dryRun {
-		m.logger.Info("would delete file (dry run)",
-			zap.String("file", file.Path),
-			zap.Time("timestamp", file.Timestamp),
-			zap.Int64("size", file.Size))
-
-		return nil
-	}
-
-	if err := os.Remove(file.Path); err != nil {
-		return fmt.Errorf("%w %s: %w", ErrDeleteFile, file.Path, err)
-	}
-
-	m.logger.Info("deleted file",
-		zap.String("file", file.Path),
-		zap.Time("timestamp", file.Timestamp),
-		zap.Int64("size", file.Size))
-
-	return nil
 }
 
 // parseTimestamp parses the timestamp from the regex matches

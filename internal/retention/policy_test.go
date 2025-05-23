@@ -254,7 +254,7 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 			{Path: "file4", Timestamp: now.Add(-120 * time.Minute)},
 		}
 
-		selected, toDelete, unselected := groupFilesByPeriod[int64](
+		selected, toDelete, unselected := groupFilesByPeriod(
 			files,
 			hourGrouper,
 			2,
@@ -271,7 +271,7 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 	})
 
 	t.Run("empty input", func(t *testing.T) {
-		selected, toDelete, unselected := groupFilesByPeriod[int64](
+		selected, toDelete, unselected := groupFilesByPeriod(
 			[]file.Info{},
 			hourGrouper,
 			2,
@@ -288,7 +288,7 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 			{Path: "file2", Timestamp: now.Add(-60 * time.Minute)},
 		}
 
-		selected, toDelete, unselected := groupFilesByPeriod[int64](
+		selected, toDelete, unselected := groupFilesByPeriod(
 			files,
 			hourGrouper,
 			2,
@@ -385,7 +385,7 @@ func TestGroupFilesByTimePeriod(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			groups := groupFilesByTimePeriod[int64](tt.files, tt.grouper)
+			groups := groupFilesByTimePeriod(tt.files, tt.grouper)
 			if tt.expected == nil {
 				assert.Nil(t, groups)
 			} else {

@@ -9,7 +9,12 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go-version: [1.23.x]
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +28,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: ${{ matrix.go-version }}
+          check-latest: true
 
       - name: Set up Bazel
         uses: bazelbuild/setup-bazelisk@v3
@@ -37,6 +43,7 @@ jobs:
 
       - name: Run tests
         run: bazel test //...
+        shell: bash
 
       - name: Run linter
         uses: golangci/golangci-lint-action@v8
@@ -44,40 +51,9 @@ jobs:
           version: latest
           args: --config=.golangci.yml
 
-  build:
-    name: Build
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache Bazel cache
-        uses: actions/cache@v4
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
         with:
-          path: ~/.cache/bazel
-          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
-          restore-keys: bazel-cache-${{ runner.os }}-
+          file: ./coverage.txt
+          fail_ci_if_error: true
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
-      - name: Set up Bazel
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Restore Bazel cache (if available)
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/bazel
-          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
-          restore-keys: bazel-cache-${{ runner.os }}-
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build multi-arch image
-        run: bazel build //:image
