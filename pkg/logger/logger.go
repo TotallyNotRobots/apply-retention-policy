@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -88,7 +90,8 @@ func (l *Logger) Sync() error {
 	return l.Logger.Sync()
 }
 
-// MustSync flushes any buffered log entries, and panics on any error in non-test environments
+// MustSync flushes any buffered log entries,
+// and panics on any error in non-test environments
 func (l *Logger) MustSync() {
 	err := l.Logger.Sync()
 	if err != nil {

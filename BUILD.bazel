@@ -24,7 +24,6 @@ load("@gazelle//:def.bzl", "gazelle")
 load("@rules_go//go:def.bzl", "go_binary", "go_library")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//:lint.bzl", "module_lint_test")
 
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
 gazelle(name = "gazelle")
@@ -84,47 +83,3 @@ oci_push(
     image = ":image",
     repository = "ghcr.io/totallynotrobots/apply-retention-policy",
 )
-
-# Platform-specific config settings
-config_setting(
-    name = "linux_amd64",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
-)
-
-config_setting(
-    name = "linux_arm64",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:arm64",
-    ],
-)
-
-config_setting(
-    name = "darwin_amd64",
-    constraint_values = [
-        "@platforms//os:osx",
-        "@platforms//cpu:x86_64",
-    ],
-)
-
-config_setting(
-    name = "darwin_arm64",
-    constraint_values = [
-        "@platforms//os:osx",
-        "@platforms//cpu:arm64",
-    ],
-)
-
-exports_files(["go.sum", ".golangci.yml", "go.mod", "lint.sh"])
-
-filegroup(
-    name = "all_build_files",
-    srcs = glob(["**/BUILD.bazel"]),
-    visibility = ["//tools:__subpackages__"],
-)
-
-# Define the module-level lint target
-module_lint_test()

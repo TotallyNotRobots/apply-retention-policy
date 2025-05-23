@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,8 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package config provides configuration management for the retention policy tool.
-// It handles loading and parsing of configuration files and environment variables.
+// Package config provides configuration management for the retention policy
+// tool. It handles loading and parsing of configuration files and environment
+// variables.
 package config
 
 import (
@@ -84,24 +87,31 @@ func (c *Config) Validate() error {
 	if c.Retention.Hourly < 0 {
 		return fmt.Errorf("hourly retention must be non-negative")
 	}
+
 	if c.Retention.Daily < 0 {
 		return fmt.Errorf("daily retention must be non-negative")
 	}
+
 	if c.Retention.Weekly < 0 {
 		return fmt.Errorf("weekly retention must be non-negative")
 	}
+
 	if c.Retention.Monthly < 0 {
 		return fmt.Errorf("monthly retention must be non-negative")
 	}
+
 	if c.Retention.Yearly < 0 {
 		return fmt.Errorf("yearly retention must be non-negative")
 	}
+
 	if c.FilePattern == "" {
 		return fmt.Errorf("file pattern must be specified")
 	}
+
 	if c.Directory == "" {
 		return fmt.Errorf("directory must be specified")
 	}
+
 	return nil
 }
 
@@ -115,24 +125,28 @@ func (c *Config) GetRetentionDuration() time.Duration {
 	if c.Retention.Yearly > 0 {
 		maxDuration = time.Duration(c.Retention.Yearly) * consts.YEAR
 	}
+
 	if c.Retention.Monthly > 0 {
 		duration := time.Duration(c.Retention.Monthly) * consts.MONTH
 		if duration > maxDuration {
 			maxDuration = duration
 		}
 	}
+
 	if c.Retention.Weekly > 0 {
 		duration := time.Duration(c.Retention.Weekly) * consts.WEEK
 		if duration > maxDuration {
 			maxDuration = duration
 		}
 	}
+
 	if c.Retention.Daily > 0 {
 		duration := time.Duration(c.Retention.Daily) * consts.DAY
 		if duration > maxDuration {
 			maxDuration = duration
 		}
 	}
+
 	if c.Retention.Hourly > 0 {
 		duration := time.Duration(c.Retention.Hourly) * consts.HOUR
 		if duration > maxDuration {

@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,8 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package cmd implements the command-line interface for the retention policy tool.
-// It provides commands for managing and applying retention policies to backup files.
+// Package cmd implements the command-line interface for the retention policy
+// tool. It provides commands for managing and applying retention policies to
+// backup files.
 package cmd
 
 import (
@@ -68,7 +71,11 @@ Files that don't meet the retention policy will be deleted.`,
 		defer log.MustSync()
 
 		// Initialize file manager
-		fileManager, err := file.NewManager(cfg.Directory, cfg.FilePattern, file.WithLogger(log))
+		fileManager, err := file.NewManager(
+			cfg.Directory,
+			cfg.FilePattern,
+			file.WithLogger(log),
+		)
 		if err != nil {
 			return fmt.Errorf("failed to initialize file manager: %w", err)
 		}
@@ -114,10 +121,14 @@ func init() {
 	// Add flags
 	pruneCmd.Flags().
 		BoolP("dry-run", "d", false, "Show what would be deleted without actually deleting")
-	pruneCmd.Flags().StringP("log-level", "l", "info", "Log level (debug, info, warn, error)")
-	pruneCmd.Flags().StringVarP(&cfgFile, "config", "c", "", "Path to config file")
+	pruneCmd.Flags().
+		StringP("log-level", "l", "info", "Log level (debug, info, warn, error)")
+	pruneCmd.Flags().
+		StringVarP(&cfgFile, "config", "c", "", "Path to config file")
 
 	// Bind flags to config
 	util.Must(viper.BindPFlag("dry_run", pruneCmd.Flags().Lookup("dry-run")))
-	util.Must(viper.BindPFlag("log_level", pruneCmd.Flags().Lookup("log-level")))
+	util.Must(
+		viper.BindPFlag("log_level", pruneCmd.Flags().Lookup("log-level")),
+	)
 }

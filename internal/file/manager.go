@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,7 +23,8 @@ THE SOFTWARE.
 */
 
 // Package file provides file system operations for managing backup files.
-// It handles file discovery, filtering, and operations based on retention policies.
+// It handles file discovery, filtering, and operations based on retention
+// policies.
 package file
 
 import (
@@ -74,15 +77,26 @@ func WithLogger(logger *logger.Logger) ManagerOption {
 }
 
 // NewManager creates a new file manager
-func NewManager(directory, pattern string, opts ...ManagerOption) (*Manager, error) {
+func NewManager(
+	directory, pattern string,
+	opts ...ManagerOption,
+) (*Manager, error) {
 	// Convert the pattern to a regex pattern
 	// Replace {year}, {month}, etc. with regex patterns
 	regexPattern := pattern
 	regexPattern = strings.ReplaceAll(regexPattern, "{year}", `(?P<year>\d{4})`)
-	regexPattern = strings.ReplaceAll(regexPattern, "{month}", `(?P<month>\d{2})`)
+	regexPattern = strings.ReplaceAll(
+		regexPattern,
+		"{month}",
+		`(?P<month>\d{2})`,
+	)
 	regexPattern = strings.ReplaceAll(regexPattern, "{day}", `(?P<day>\d{2})`)
 	regexPattern = strings.ReplaceAll(regexPattern, "{hour}", `(?P<hour>\d{2})`)
-	regexPattern = strings.ReplaceAll(regexPattern, "{minute}", `(?P<minute>\d{2})`)
+	regexPattern = strings.ReplaceAll(
+		regexPattern,
+		"{minute}",
+		`(?P<minute>\d{2})`,
+	)
 	regexPattern = "^" + regexPattern + "$"
 
 	compiledPattern, err := regexp.Compile(regexPattern)
@@ -92,7 +106,9 @@ func NewManager(directory, pattern string, opts ...ManagerOption) (*Manager, err
 
 	// Create manager with default values
 	m := &Manager{
-		logger:      &logger.Logger{Logger: zap.NewNop()}, // Default no-op logger
+		logger: &logger.Logger{
+			Logger: zap.NewNop(),
+		}, // Default no-op logger
 		directory:   directory,
 		filePattern: compiledPattern,
 	}
@@ -105,7 +121,66 @@ func NewManager(directory, pattern string, opts ...ManagerOption) (*Manager, err
 	return m, nil
 }
 
-// ListFiles returns a list of backup files sorted by timestamp
+// processFile processes a single file and adds it to the files slice if it matches the pattern
+func (m *Manager) processFile(
+	ctx context.Context,
+	path string,
+	d os.DirEntry,
+	files *[]Info,
+) error {
+	// Check for context cancellation
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	if d.IsDir() {
+		return nil
+	}
+
+	// Get relative path from the backup directory
+	relPath, err := filepath.Rel(m.directory, path)
+	if err != nil {
+		return err
+	}
+
+	// Check if the file matches our pattern
+	matches := m.filePattern.FindStringSubmatch(relPath)
+	if matches == nil {
+		return nil
+	}
+
+	// Get file info for size
+	info, err := d.Info()
+	if err != nil {
+		m.logger.Warn("failed to get file info",
+			zap.String("file", relPath),
+			zap.Error(err))
+
+		return nil
+	}
+
+	// Parse the timestamp from the filename
+	timestamp, err := m.parseTimestamp(matches, m.filePattern.SubexpNames())
+	if err != nil {
+		m.logger.Warn("failed to parse timestamp from filename",
+			zap.String("file", relPath),
+			zap.Error(err))
+
+		return nil
+	}
+
+	*files = append(*files, Info{
+		Path:      path,
+		Timestamp: timestamp,
+		Size:      info.Size(),
+	})
+
+	return nil
+}
+
+// ListFiles lists all files in the directory that match the pattern
 func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
 	// Check for context cancellation first
 	select {
@@ -117,60 +192,12 @@ func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
 	var files []Info
 
 	err := filepath.WalkDir(m.directory, func(path string, d os.DirEntry, err error) error {
-		// Check for context cancellation
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
 		if err != nil {
 			return err
 		}
 
-		if d.IsDir() {
-			return nil
-		}
-
-		// Get relative path from the backup directory
-		relPath, err := filepath.Rel(m.directory, path)
-		if err != nil {
-			return err
-		}
-
-		// Check if the file matches our pattern
-		matches := m.filePattern.FindStringSubmatch(relPath)
-		if matches == nil {
-			return nil
-		}
-
-		// Get file info for size
-		info, err := d.Info()
-		if err != nil {
-			m.logger.Warn("failed to get file info",
-				zap.String("file", relPath),
-				zap.Error(err))
-			return nil
-		}
-
-		// Parse the timestamp from the filename
-		timestamp, err := m.parseTimestamp(matches, m.filePattern.SubexpNames())
-		if err != nil {
-			m.logger.Warn("failed to parse timestamp from filename",
-				zap.String("file", relPath),
-				zap.Error(err))
-			return nil
-		}
-
-		files = append(files, Info{
-			Path:      path,
-			Timestamp: timestamp,
-			Size:      info.Size(),
-		})
-
-		return nil
+		return m.processFile(ctx, path, d, &files)
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrListFiles, err)
 	}
@@ -184,7 +211,11 @@ func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
 }
 
 // DeleteFile deletes a file and logs the operation
-func (m *Manager) DeleteFile(ctx context.Context, file Info, dryRun bool) error {
+func (m *Manager) DeleteFile(
+	ctx context.Context,
+	file Info,
+	dryRun bool,
+) error {
 	// Check for context cancellation
 	select {
 	case <-ctx.Done():
@@ -197,6 +228,7 @@ func (m *Manager) DeleteFile(ctx context.Context, file Info, dryRun bool) error 
 			zap.String("file", file.Path),
 			zap.Time("timestamp", file.Timestamp),
 			zap.Int64("size", file.Size))
+
 		return nil
 	}
 
@@ -213,7 +245,10 @@ func (m *Manager) DeleteFile(ctx context.Context, file Info, dryRun bool) error 
 }
 
 // parseTimestamp parses the timestamp from the regex matches
-func (m *Manager) parseTimestamp(matches []string, fieldNames []string) (time.Time, error) {
+func (m *Manager) parseTimestamp(
+	matches []string,
+	fieldNames []string,
+) (time.Time, error) {
 	if len(matches) != len(fieldNames) {
 		return time.Time{}, fmt.Errorf(
 			"%w: mismatch between matches and fieldNames: got %d matches, expected %d",
@@ -242,8 +277,14 @@ func (m *Manager) parseTimestamp(matches []string, fieldNames []string) (time.Ti
 	}
 
 	// Format timestamp string
-	timestampStr := fmt.Sprintf("%s-%s-%s-%s-%s",
-		parts["year"], parts["month"], parts["day"], parts["hour"], parts["minute"])
+	timestampStr := fmt.Sprintf(
+		"%s-%s-%s-%s-%s",
+		parts["year"],
+		parts["month"],
+		parts["day"],
+		parts["hour"],
+		parts["minute"],
+	)
 
 	// Parse the timestamp
 	timestamp, err := time.Parse("2006-01-02-15-04", timestampStr)

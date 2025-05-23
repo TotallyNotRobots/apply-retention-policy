@@ -1,3 +1,27 @@
+/*
+The MIT License (MIT)
+
+Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 package config
 
 import (
@@ -27,11 +51,13 @@ dry_run: true
 log_level: "debug"
 `
 	configFile := filepath.Join(tmpDir, "retention-policy.yaml")
-	err := os.WriteFile(configFile, []byte(configContent), 0600)
+	err := os.WriteFile(configFile, []byte(configContent), 0o600)
 	require.NoError(t, err)
 
+	var cfg *Config
+
 	t.Run("load from file", func(t *testing.T) {
-		cfg, err := LoadConfig(configFile)
+		cfg, err = LoadConfig(configFile)
 		require.NoError(t, err)
 		assert.NotNil(t, cfg)
 
@@ -41,7 +67,11 @@ log_level: "debug"
 		assert.Equal(t, 2, cfg.Retention.Weekly)
 		assert.Equal(t, 2, cfg.Retention.Monthly)
 		assert.Equal(t, 1, cfg.Retention.Yearly)
-		assert.Equal(t, "backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz", cfg.FilePattern)
+		assert.Equal(
+			t,
+			"backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz",
+			cfg.FilePattern,
+		)
 		assert.Equal(t, "/backups", cfg.Directory)
 		assert.True(t, cfg.DryRun)
 		assert.Equal(t, "debug", cfg.LogLevel)
@@ -49,28 +79,41 @@ log_level: "debug"
 
 	t.Run("load from default locations", func(t *testing.T) {
 		// Create config in current directory
-		err = os.WriteFile("retention-policy.yaml", []byte(configContent), 0600)
+		err = os.WriteFile(
+			"retention-policy.yaml",
+			[]byte(configContent),
+			0o600,
+		)
 		require.NoError(t, err)
+
 		defer func() {
-			if err := os.Remove("retention-policy.yaml"); err != nil {
+			if err = os.Remove("retention-policy.yaml"); err != nil {
 				t.Errorf("Failed to remove test file: %v", err)
 			}
 		}()
 
-		cfg, err := LoadConfig("")
+		cfg, err = LoadConfig("")
 		require.NoError(t, err)
 		assert.NotNil(t, cfg)
-		assert.Equal(t, "backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz", cfg.FilePattern)
+		assert.Equal(
+			t,
+			"backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz",
+			cfg.FilePattern,
+		)
 	})
 
 	t.Run("invalid config file", func(t *testing.T) {
-		_, err := LoadConfig("non-existent.yaml")
+		_, err = LoadConfig("non-existent.yaml")
 		require.Error(t, err)
 	})
 
 	t.Run("invalid yaml", func(t *testing.T) {
 		invalidConfig := filepath.Join(tmpDir, "invalid.yaml")
-		err = os.WriteFile(invalidConfig, []byte("invalid: yaml: content"), 0600)
+		err = os.WriteFile(
+			invalidConfig,
+			[]byte("invalid: yaml: content"),
+			0o600,
+		)
 		require.NoError(t, err)
 
 		_, err := LoadConfig(invalidConfig)

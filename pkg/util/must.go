@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +27,8 @@ THE SOFTWARE.
 package util
 
 // Must panics if the given error is not nil.
-// This is useful for handling errors that should never occur in normal operation.
+// This is useful for handling errors that should
+// never occur in normal operation.
 func Must(err error) {
 	if err != nil {
 		panic(err)
@@ -33,8 +36,8 @@ func Must(err error) {
 }
 
 // MustReturn returns the value if err is nil, otherwise it panics.
-// This is useful for handling errors that should never occur in normal operation,
-// while also returning a value in the success case.
+// This is useful for handling errors that should never occur in normal
+// operation, while also returning a value in the success case.
 func MustReturn[T any](val T, err error) T {
 	if err != nil {
 		panic(err)

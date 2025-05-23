@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package file
 
 import (
@@ -70,7 +73,11 @@ func TestNewManager(t *testing.T) {
 		// Use a no-op logger for testing
 		log := &logger.Logger{Logger: zap.NewNop()}
 
-		m, err := NewManager("/tmp", "backup-{year}-{month}-{day}.tar.gz", WithLogger(log))
+		m, err := NewManager(
+			"/tmp",
+			"backup-{year}-{month}-{day}.tar.gz",
+			WithLogger(log),
+		)
 		require.NoError(t, err)
 		assert.NotNil(t, m.logger)
 	})
@@ -99,7 +106,7 @@ func TestListFiles(t *testing.T) {
 	for _, file := range files {
 		// In test context, we control the path and it's safe to use
 		path := filepath.Clean(filepath.Join(dir, file))
-		_, err := os.Create(path)
+		_, err = os.Create(path)
 		require.NoError(t, err)
 	}
 
@@ -115,11 +122,16 @@ func TestListFiles(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, list, len(files))
 	assert.Equal(t, "backup-202501030000.zip", filepath.Base(list[0].Path))
-	assert.Equal(t, "backup-202501010000.zip", filepath.Base(list[len(list)-1].Path))
+	assert.Equal(
+		t,
+		"backup-202501010000.zip",
+		filepath.Base(list[len(list)-1].Path),
+	)
 
 	// Test with cancelled context
 	cancelledCtx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
+
 	_, err = manager.ListFiles(cancelledCtx)
 	require.Error(t, err)
 }
@@ -149,6 +161,7 @@ func TestDeleteFile(t *testing.T) {
 	// Test with cancelled context
 	cancelledCtx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
+
 	err = manager.DeleteFile(cancelledCtx, info, false)
 	require.Error(t, err)
 
@@ -193,39 +206,81 @@ func TestParseTimestamp(t *testing.T) {
 		expectErr  bool
 	}{
 		{
-			name:       "valid case",
-			matches:    []string{"backup-202501010000.zip", "2025", "01", "01", "00", "00"},
+			name: "valid case",
+			matches: []string{
+				"backup-202501010000.zip",
+				"2025",
+				"01",
+				"01",
+				"00",
+				"00",
+			},
 			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
 			expected:   time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 			expectErr:  false,
 		},
 		{
-			name:       "missing year",
-			matches:    []string{"backup--01010000.zip", "", "01", "01", "00", "00"},
+			name: "missing year",
+			matches: []string{
+				"backup--01010000.zip",
+				"",
+				"01",
+				"01",
+				"00",
+				"00",
+			},
 			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
 			expectErr:  true,
 		},
 		{
-			name:       "invalid month",
-			matches:    []string{"backup-202513010000.zip", "2025", "13", "01", "00", "00"},
+			name: "invalid month",
+			matches: []string{
+				"backup-202513010000.zip",
+				"2025",
+				"13",
+				"01",
+				"00",
+				"00",
+			},
 			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
 			expectErr:  true,
 		},
 		{
-			name:       "invalid day",
-			matches:    []string{"backup-202501320000.zip", "2025", "01", "32", "00", "00"},
+			name: "invalid day",
+			matches: []string{
+				"backup-202501320000.zip",
+				"2025",
+				"01",
+				"32",
+				"00",
+				"00",
+			},
 			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
 			expectErr:  true,
 		},
 		{
-			name:       "invalid hour",
-			matches:    []string{"backup-202501012500.zip", "2025", "01", "01", "25", "00"},
+			name: "invalid hour",
+			matches: []string{
+				"backup-202501012500.zip",
+				"2025",
+				"01",
+				"01",
+				"25",
+				"00",
+			},
 			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
 			expectErr:  true,
 		},
 		{
-			name:       "invalid minute",
-			matches:    []string{"backup-202501010060.zip", "2025", "01", "01", "00", "60"},
+			name: "invalid minute",
+			matches: []string{
+				"backup-202501010060.zip",
+				"2025",
+				"01",
+				"01",
+				"00",
+				"60",
+			},
 			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
 			expectErr:  true,
 		},
@@ -250,7 +305,12 @@ func TestParseTimestamp(t *testing.T) {
 		testCase := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			timestamp, err := manager.parseTimestamp(testCase.matches, testCase.fieldNames)
+
+			timestamp, err := manager.parseTimestamp(
+				testCase.matches,
+				testCase.fieldNames,
+			)
+
 			if testCase.expectErr {
 				require.Error(t, err)
 			} else {

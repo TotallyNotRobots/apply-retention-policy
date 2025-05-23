@@ -5,7 +5,6 @@ bazel_dep(name = "gazelle", version = "0.43.0")
 bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
-bazel_dep(name = "rules_python", version = "0.21.0")
 
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 go_sdk.download(version = "1.23.4")
@@ -29,7 +28,3 @@ oci.pull(
 
 # Make platforms available
 use_repo(oci, "distroless_base_amd64", "distroless_base_arm64")
-
-# Make golangci-lint repositories available
-golangci_lint = use_extension("//:repositories.bzl", "golangci_lint")
-use_repo(golangci_lint, "golangci_lint")

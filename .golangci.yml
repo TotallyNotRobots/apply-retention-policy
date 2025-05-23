@@ -21,39 +21,136 @@
 # THE SOFTWARE.
 
 version: "2"
+
 run:
   concurrency: 4
+  timeout: 5m
+
 linters:
   enable:
-    - gosec
-    - misspell
     - revive
+    - gosec
+    - staticcheck
+    - ineffassign
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - errcheck
+    - gocyclo
+    - govet
+    - lll
+    - dupl
+    - gochecknoglobals
+    - wsl
+    - forbidigo
+    - gocognit
+    - gocritic
+    - gocyclo
+    - goconst
+    - gosec
+    - govet
+  settings:
+    revive:
+      rules:
+        - name: exported
+        - name: package-comments
+        - name: var-naming
+        - name: error-strings
+        - name: error-naming
+        - name: context-keys-type
+        - name: context-as-argument
+        - name: time-naming
+        - name: var-declaration
+        - name: range
+        - name: range-val-in-closure
+        - name: waitgroup-by-value
+        - name: empty-lines
+        - name: line-length-limit
+          arguments:
+            - 100
+        - name: argument-limit
+        - name: cyclomatic
+          arguments:
+            - 15
+        - name: max-public-structs
+        - name: file-header
+          arguments:
+            - Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
+    gocyclo:
+      min-complexity: 15
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+    govet:
+      enable:
+        - shadow
+    staticcheck:
+      checks:
+        - all
   exclusions:
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+      - legacy
+    warn-unused: true
     generated: lax
     rules:
-      - path: (.+)\.go$
-        text: bazel-.*
-      - path: (.+)\.go$
-        text: \.bazel/.*
-      - path: (.+)\.go$
-        text: \.bazel-bin/.*
-      - path: (.+)\.go$
-        text: \.bazel-out/.*
-      - path: (.+)\.go$
-        text: \.bazel-testlogs/.*
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
+      - path: cmd/root.go
+        linters:
+          - gochecknoglobals
+          - lll
+        text: "rootCmd|cfgFile"
+      - path: cmd/prune.go
+        linters:
+          - gochecknoglobals
+        text: "pruneCmd"
+      - path: internal/retention/policy.go
+        linters:
+          - gochecknoglobals
+        text: "hourGrouper|dayGrouper|weekGrouper|monthGrouper|yearGrouper"
+      - path: pkg/logger/logger.go
+        linters:
+          - gochecknoglobals
+        text: "syncErrorOnce|isTestMode"
+
 formatters:
   enable:
     - gofmt
+    - goimports
+    - golines
+  settings:
+    goimports:
+      local-prefixes:
+      - "github.com/TotallyNotRobots/apply-retention-policy"
+    golines:
+      max-len: 100
+      tab-len: 4
+      shorten-comments: true
+      reformat-tags: true
+      chain-split-dots: true
+
   exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+    warn-unused: true
+    generated: strict
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: false
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+  path-prefix: ""
+  path-mode: "abs"
+  sort-order:
+    - linter
+    - severity
+    - file
+  show-stats: false

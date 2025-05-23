@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package cmd implements the command-line interface for the retention policy tool.
+// Package cmd implements the command-line interface for the retention policy
+// tool.
 // It provides the root command and common functionality for all subcommands.
 package cmd
 
@@ -47,7 +50,8 @@ to quickly create a Cobra application.`,
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
+// Execute adds all child commands to the root command and sets flags
+// appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
@@ -60,7 +64,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-
 	rootCmd.PersistentFlags().
-		StringVar(&cfgFile, "config", "", "config file (default is $HOME/.apply-retention-policy.yaml)")
+		StringVar(&cfgFile, "config", "",
+			"config file (default is $HOME/.apply-retention-policy.yaml)")
 }

@@ -137,7 +137,6 @@
     "https://bcr.bazel.build/modules/rules_proto/7.0.2/MODULE.bazel": "bf81793bd6d2ad89a37a40693e56c61b0ee30f7a7fdbaf3eabbf5f39de47dea2",
     "https://bcr.bazel.build/modules/rules_proto/7.0.2/source.json": "1e5e7260ae32ef4f2b52fd1d0de8d03b606a44c91b694d2f1afb1d3b28a48ce1",
     "https://bcr.bazel.build/modules/rules_python/0.10.2/MODULE.bazel": "cc82bc96f2997baa545ab3ce73f196d040ffb8756fd2d66125a530031cd90e5f",
-    "https://bcr.bazel.build/modules/rules_python/0.21.0/MODULE.bazel": "af3962f20b4d7e2194b8ec8458b8daf92034c81c0ba646e1089baddbad447785",
     "https://bcr.bazel.build/modules/rules_python/0.23.1/MODULE.bazel": "49ffccf0511cb8414de28321f5fcf2a31312b47c40cc21577144b7447f2bf300",
     "https://bcr.bazel.build/modules/rules_python/0.25.0/MODULE.bazel": "72f1506841c920a1afec76975b35312410eea3aa7b63267436bfb1dd91d2d382",
     "https://bcr.bazel.build/modules/rules_python/0.28.0/MODULE.bazel": "cba2573d870babc976664a912539b320cbaa7114cd3e8f053c720171cde331ed",
@@ -166,22 +165,6 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
-    "//:repositories.bzl%golangci_lint": {
-      "general": {
-        "bzlTransitiveDigest": "GCR9wnjtIN2PTAwlqQTQPtAbYDnwUFfar775G97/uwE=",
-        "usagesDigest": "XjcfdS0Z3M3uqznd/9KA5qhutW1fPh4h4E6EdMMvFiM=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "golangci_lint": {
-            "repoRuleId": "@@//:repositories.bzl%golangci_lint_repository",
-            "attributes": {}
-          }
-        },
-        "recordedRepoMappingEntries": []
-      }
-    },
     "@@aspect_bazel_lib+//lib:extensions.bzl%toolchains": {
       "general": {
         "bzlTransitiveDigest": "GZqx0/yUW5hj1PczZlZYPEAG7qnnsdcQ+hrQ6CuAK18=",

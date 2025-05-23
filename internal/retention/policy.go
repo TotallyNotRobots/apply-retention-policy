@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,8 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package retention implements retention policy logic for backup files.
-// It provides functionality for evaluating and applying retention rules to backup files.
+// Package retention provides functionality for applying retention policies to
+// backup files. It implements various retention strategies based on time
+// periods (hourly, daily, weekly, monthly, yearly).
 package retention
 
 import (
@@ -178,14 +181,16 @@ func (p *Policy) Apply(files []file.Info) ([]file.Info, error) {
 	return toDelete, nil
 }
 
-// groupFilesByTimePeriod groups files into time periods based on the given duration.
-// Files are sorted by timestamp in descending order and grouped by their time period.
-// Returns a slice of file groups, where each group contains files from the same time period.
+// groupFilesByTimePeriod groups files into time periods based on the given
+// duration. Files are sorted by timestamp in descending order and grouped by
+// their time period. Returns a slice of file groups, where each group contains
+// files from the same time period.
 func groupFilesByTimePeriod[T comparable](
 	files []file.Info,
 	grouper func(file.Info) T,
 ) [][]file.Info {
 	var groups [][]file.Info
+
 	currentGroup := []file.Info{}
 
 	slices.SortFunc(files, func(a, b file.Info) int {
@@ -193,7 +198,8 @@ func groupFilesByTimePeriod[T comparable](
 	})
 
 	for _, f := range files {
-		// If this is the first file or it's in the same period as the previous file
+		// If this is the first file or it's in the same period as the previous
+		// file
 		if len(currentGroup) == 0 ||
 			grouper(f) == grouper(currentGroup[0]) {
 			currentGroup = append(currentGroup, f)
@@ -202,6 +208,7 @@ func groupFilesByTimePeriod[T comparable](
 			if len(currentGroup) > 0 {
 				groups = append(groups, currentGroup)
 			}
+
 			currentGroup = []file.Info{f}
 		}
 	}

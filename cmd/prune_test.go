@@ -1,3 +1,27 @@
+/*
+The MIT License (MIT)
+
+Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 package cmd
 
 import (
@@ -25,8 +49,9 @@ func TestPruneCommand(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
+
 	defer func() {
-		err := os.Chdir(cwd)
+		err = os.Chdir(cwd)
 		require.NoError(t, err)
 	}()
 
@@ -60,7 +85,7 @@ func TestPruneCommand(t *testing.T) {
 
 	for _, tf := range testFiles {
 		path := filepath.Join(tmpDir, tf.name)
-		err := os.WriteFile(path, []byte(tf.content), 0600)
+		err = os.WriteFile(path, []byte(tf.content), 0o600)
 		require.NoError(t, err)
 	}
 
@@ -78,7 +103,7 @@ dry_run: false
 log_level: "debug"
 `
 	configFile := filepath.Join(tmpDir, "retention-policy.yaml")
-	err = os.WriteFile(configFile, []byte(configContent), 0600)
+	err = os.WriteFile(configFile, []byte(configContent), 0o600)
 	require.NoError(t, err)
 
 	// Set up viper for all tests
@@ -89,20 +114,28 @@ log_level: "debug"
 
 	t.Run("dry run", func(t *testing.T) {
 		viper.Set("dry_run", true)
+
 		cmd := pruneCmd
 		err := cmd.Flags().Set("config", configFile)
 		require.NoError(t, err)
 		err = cmd.RunE(cmd, nil)
 		require.NoError(t, err)
+
 		for _, tf := range testFiles {
 			path := filepath.Join(tmpDir, tf.name)
 			_, err := os.Stat(path)
-			assert.NoError(t, err, "File should not be deleted in dry run mode: %s", tf.name)
+			assert.NoError(
+				t,
+				err,
+				"File should not be deleted in dry run mode: %s",
+				tf.name,
+			)
 		}
 	})
 
 	t.Run("actual run", func(t *testing.T) {
 		viper.Set("dry_run", false)
+
 		cmd := pruneCmd
 		err := cmd.Flags().Set("config", configFile)
 		require.NoError(t, err)
@@ -117,7 +150,12 @@ log_level: "debug"
 		for _, name := range expectedDeleted {
 			path := filepath.Join(tmpDir, name)
 			_, err := os.Stat(path)
-			assert.True(t, os.IsNotExist(err), "File should be deleted: %s", name)
+			assert.True(
+				t,
+				os.IsNotExist(err),
+				"File should be deleted: %s",
+				name,
+			)
 		}
 
 		// Verify retained files
@@ -137,6 +175,7 @@ log_level: "debug"
 	t.Run("invalid config", func(t *testing.T) {
 		viper.Reset()
 		viper.SetConfigFile("non-existent.yaml")
+
 		cmd := pruneCmd
 		err := cmd.Flags().Set("config", "non-existent.yaml")
 		require.NoError(t, err)
@@ -150,8 +189,10 @@ log_level: "debug"
 		viper.SetConfigFile(configFile)
 		err := viper.ReadInConfig()
 		require.NoError(t, err)
+
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
+
 		cmd := pruneCmd
 		cmd.SetContext(ctx)
 		err = cmd.Flags().Set("config", configFile)

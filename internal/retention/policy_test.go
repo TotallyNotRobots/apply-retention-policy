@@ -1,4 +1,6 @@
 /*
+The MIT License (MIT)
+
 Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -67,30 +69,78 @@ func TestPolicy_Apply(t *testing.T) {
 		now := time.Date(2024, 3, 15, 12, 0, 0, 0, time.UTC)
 		files := []file.Info{
 			// Hourly backups (keep 2)
-			{Path: "backup-2024-03-15-11-00.tar.gz", Timestamp: now.Add(-1 * time.Hour)},
-			{Path: "backup-2024-03-15-10-00.tar.gz", Timestamp: now.Add(-2 * time.Hour)},
-			{Path: "backup-2024-03-15-09-00.tar.gz", Timestamp: now.Add(-3 * time.Hour)},
-			{Path: "backup-2024-03-15-08-00.tar.gz", Timestamp: now.Add(-4 * time.Hour)},
+			{
+				Path:      "backup-2024-03-15-11-00.tar.gz",
+				Timestamp: now.Add(-1 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-03-15-10-00.tar.gz",
+				Timestamp: now.Add(-2 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-03-15-09-00.tar.gz",
+				Timestamp: now.Add(-3 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-03-15-08-00.tar.gz",
+				Timestamp: now.Add(-4 * time.Hour),
+			},
 
 			// Daily backups (keep 3)
-			{Path: "backup-2024-03-14-00-00.tar.gz", Timestamp: now.Add(-36 * time.Hour)},
-			{Path: "backup-2024-03-13-00-00.tar.gz", Timestamp: now.Add(-60 * time.Hour)},
-			{Path: "backup-2024-03-12-00-00.tar.gz", Timestamp: now.Add(-84 * time.Hour)},
-			{Path: "backup-2024-03-11-00-00.tar.gz", Timestamp: now.Add(-108 * time.Hour)},
+			{
+				Path:      "backup-2024-03-14-00-00.tar.gz",
+				Timestamp: now.Add(-36 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-03-13-00-00.tar.gz",
+				Timestamp: now.Add(-60 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-03-12-00-00.tar.gz",
+				Timestamp: now.Add(-84 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-03-11-00-00.tar.gz",
+				Timestamp: now.Add(-108 * time.Hour),
+			},
 
 			// Weekly backups (keep 2)
-			{Path: "backup-2024-03-08-00-00.tar.gz", Timestamp: now.Add(-7 * 24 * time.Hour)},
-			{Path: "backup-2024-03-01-00-00.tar.gz", Timestamp: now.Add(-14 * 24 * time.Hour)},
-			{Path: "backup-2024-02-23-00-00.tar.gz", Timestamp: now.Add(-21 * 24 * time.Hour)},
+			{
+				Path:      "backup-2024-03-08-00-00.tar.gz",
+				Timestamp: now.Add(-7 * 24 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-03-01-00-00.tar.gz",
+				Timestamp: now.Add(-14 * 24 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-02-23-00-00.tar.gz",
+				Timestamp: now.Add(-21 * 24 * time.Hour),
+			},
 
 			// Monthly backups (keep 2)
-			{Path: "backup-2024-02-15-00-00.tar.gz", Timestamp: now.Add(-29 * 24 * time.Hour)},
-			{Path: "backup-2024-01-15-00-00.tar.gz", Timestamp: now.Add(-59 * 24 * time.Hour)},
-			{Path: "backup-2023-12-15-00-00.tar.gz", Timestamp: now.Add(-90 * 24 * time.Hour)},
+			{
+				Path:      "backup-2024-02-15-00-00.tar.gz",
+				Timestamp: now.Add(-29 * 24 * time.Hour),
+			},
+			{
+				Path:      "backup-2024-01-15-00-00.tar.gz",
+				Timestamp: now.Add(-59 * 24 * time.Hour),
+			},
+			{
+				Path:      "backup-2023-12-15-00-00.tar.gz",
+				Timestamp: now.Add(-90 * 24 * time.Hour),
+			},
 
 			// Yearly backup (keep 1)
-			{Path: "backup-2023-03-15-00-00.tar.gz", Timestamp: now.Add(-366 * 24 * time.Hour)},
-			{Path: "backup-2022-03-15-00-00.tar.gz", Timestamp: now.Add(-731 * 24 * time.Hour)},
+			{
+				Path:      "backup-2023-03-15-00-00.tar.gz",
+				Timestamp: now.Add(-366 * 24 * time.Hour),
+			},
+			{
+				Path:      "backup-2022-03-15-00-00.tar.gz",
+				Timestamp: now.Add(-731 * 24 * time.Hour),
+			},
 		}
 
 		toDelete, err := policy.Apply(files)
@@ -107,15 +157,23 @@ func TestPolicy_Apply(t *testing.T) {
 		}
 
 		assert.Len(t, toDelete, len(expectedToDelete))
+
 		for _, expected := range expectedToDelete {
 			found := false
+
 			for _, f := range toDelete {
 				if f.Path == expected {
 					found = true
 					break
 				}
 			}
-			assert.True(t, found, "Expected file %s to be marked for deletion", expected)
+
+			assert.True(
+				t,
+				found,
+				"Expected file %s to be marked for deletion",
+				expected,
+			)
 		}
 	})
 
@@ -125,8 +183,14 @@ func TestPolicy_Apply(t *testing.T) {
 		t.Run("files exactly on period boundaries", func(t *testing.T) {
 			files := []file.Info{
 				{Path: "backup-2024-03-15-12-00.tar.gz", Timestamp: now},
-				{Path: "backup-2024-03-15-11-00.tar.gz", Timestamp: now.Add(-1 * time.Hour)},
-				{Path: "backup-2024-03-15-10-00.tar.gz", Timestamp: now.Add(-2 * time.Hour)},
+				{
+					Path:      "backup-2024-03-15-11-00.tar.gz",
+					Timestamp: now.Add(-1 * time.Hour),
+				},
+				{
+					Path:      "backup-2024-03-15-10-00.tar.gz",
+					Timestamp: now.Add(-2 * time.Hour),
+				},
 			}
 
 			toDelete, err := policy.Apply(files)
@@ -137,9 +201,18 @@ func TestPolicy_Apply(t *testing.T) {
 		t.Run("files spanning multiple periods", func(t *testing.T) {
 			files := []file.Info{
 				{Path: "backup-2024-03-15-12-00.tar.gz", Timestamp: now},
-				{Path: "backup-2024-03-14-12-00.tar.gz", Timestamp: now.Add(-24 * time.Hour)},
-				{Path: "backup-2024-03-13-12-00.tar.gz", Timestamp: now.Add(-48 * time.Hour)},
-				{Path: "backup-2024-03-12-12-00.tar.gz", Timestamp: now.Add(-72 * time.Hour)},
+				{
+					Path:      "backup-2024-03-14-12-00.tar.gz",
+					Timestamp: now.Add(-24 * time.Hour),
+				},
+				{
+					Path:      "backup-2024-03-13-12-00.tar.gz",
+					Timestamp: now.Add(-48 * time.Hour),
+				},
+				{
+					Path:      "backup-2024-03-12-12-00.tar.gz",
+					Timestamp: now.Add(-72 * time.Hour),
+				},
 			}
 
 			toDelete, err := policy.Apply(files)
@@ -149,9 +222,15 @@ func TestPolicy_Apply(t *testing.T) {
 
 		t.Run("files out of order", func(t *testing.T) {
 			files := []file.Info{
-				{Path: "backup-2024-03-15-10-00.tar.gz", Timestamp: now.Add(-2 * time.Hour)},
+				{
+					Path:      "backup-2024-03-15-10-00.tar.gz",
+					Timestamp: now.Add(-2 * time.Hour),
+				},
 				{Path: "backup-2024-03-15-12-00.tar.gz", Timestamp: now},
-				{Path: "backup-2024-03-15-11-00.tar.gz", Timestamp: now.Add(-1 * time.Hour)},
+				{
+					Path:      "backup-2024-03-15-11-00.tar.gz",
+					Timestamp: now.Add(-1 * time.Hour),
+				},
 			}
 
 			toDelete, err := policy.Apply(files)
