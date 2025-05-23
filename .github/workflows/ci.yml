@@ -52,7 +52,7 @@ jobs:
           args: --config=.golangci.yml
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.txt
           fail_ci_if_error: true
