@@ -32,7 +32,6 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
@@ -124,7 +123,7 @@ log_level: "debug"
 		for _, tf := range testFiles {
 			path := filepath.Join(tmpDir, tf.name)
 			_, err := os.Stat(path)
-			assert.NoError(
+			require.NoError(
 				t,
 				err,
 				"File should not be deleted in dry run mode: %s",
@@ -150,12 +149,8 @@ log_level: "debug"
 		for _, name := range expectedDeleted {
 			path := filepath.Join(tmpDir, name)
 			_, err := os.Stat(path)
-			assert.True(
-				t,
-				os.IsNotExist(err),
-				"File should be deleted: %s",
-				name,
-			)
+			require.Error(t, err)
+			require.ErrorIs(t, err, os.ErrNotExist)
 		}
 
 		// Verify retained files
@@ -168,7 +163,7 @@ log_level: "debug"
 		for _, name := range expectedRetained {
 			path := filepath.Join(tmpDir, name)
 			_, err := os.Stat(path)
-			assert.NoError(t, err, "File should be retained: %s", name)
+			require.NoError(t, err, "File should be retained: %s", name)
 		}
 	})
 
@@ -181,7 +176,7 @@ log_level: "debug"
 		require.NoError(t, err)
 		err = cmd.RunE(cmd, nil)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to load config")
+		require.Contains(t, err.Error(), "failed to load config")
 	})
 
 	t.Run("context cancellation", func(t *testing.T) {
@@ -199,7 +194,7 @@ log_level: "debug"
 		require.NoError(t, err)
 		err = cmd.RunE(cmd, nil)
 		require.Error(t, err)
-		assert.ErrorIs(t, err, context.Canceled)
+		require.ErrorIs(t, err, context.Canceled)
 	})
 }
 
@@ -215,7 +210,7 @@ func TestPruneCommandFlags(t *testing.T) {
 		require.NoError(t, err)
 		err = viper.BindPFlag("dry_run", cmd.Flags().Lookup("dry-run"))
 		require.NoError(t, err)
-		assert.True(t, viper.GetBool("dry_run"))
+		require.True(t, viper.GetBool("dry_run"))
 	})
 	t.Run("log level flag", func(t *testing.T) {
 		cmd := pruneCmd
@@ -223,6 +218,6 @@ func TestPruneCommandFlags(t *testing.T) {
 		require.NoError(t, err)
 		err = viper.BindPFlag("log_level", cmd.Flags().Lookup("log-level"))
 		require.NoError(t, err)
-		assert.Equal(t, "debug", viper.GetString("log_level"))
+		require.Equal(t, "debug", viper.GetString("log_level"))
 	})
 }

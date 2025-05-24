@@ -37,7 +37,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
@@ -159,15 +158,15 @@ func TestNewManager(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		assert.NotNil(t, m)
-		assert.Equal(t, "/tmp", m.directory)
-		assert.NotNil(t, m.filePattern)
+		require.NotNil(t, m)
+		require.Equal(t, "/tmp", m.directory)
+		require.NotNil(t, m.filePattern)
 	})
 
 	t.Run("invalid pattern", func(t *testing.T) {
 		_, err := NewManager("/tmp", "backup-[invalid")
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrInvalidPattern)
+		require.ErrorIs(t, err, ErrInvalidPattern)
 	})
 
 	t.Run("with logger option", func(t *testing.T) {
@@ -180,7 +179,7 @@ func TestNewManager(t *testing.T) {
 			WithLogger(log),
 		)
 		require.NoError(t, err)
-		assert.NotNil(t, m.logger)
+		require.NotNil(t, m.logger)
 	})
 }
 
@@ -237,12 +236,12 @@ func TestListFiles(t *testing.T) {
 
 		require.NoError(t, listErr)
 
-		assert.Len(t, list, len(files))
+		require.Len(t, list, len(files))
 
 		for _, file := range list {
 			base := filepath.Base(file.Path)
-			assert.Contains(t, files, base)
-			assert.NotEqual(t, "symlink", base, "Symlink should not be included in results")
+			require.Contains(t, files, base)
+			require.NotEqual(t, "symlink", base, "Symlink should not be included in results")
 		}
 	})
 
@@ -265,12 +264,12 @@ func TestListFiles(t *testing.T) {
 		list, listErr := manager.ListFiles(ctx)
 		require.NoError(t, listErr)
 
-		assert.Len(t, list, len(files))
+		require.Len(t, list, len(files))
 
 		for _, file := range list {
 			base := filepath.Base(file.Path)
-			assert.Contains(t, files, base)
-			assert.NotEqual(t, "pipe", base, "Named pipe should not be included in results")
+			require.Contains(t, files, base)
+			require.NotEqual(t, "pipe", base, "Named pipe should not be included in results")
 		}
 
 		// Clean up the pipe
@@ -283,11 +282,11 @@ func TestListFiles(t *testing.T) {
 
 	// Verify
 	require.NoError(t, listErr)
-	assert.Len(t, list, len(files))
+	require.Len(t, list, len(files))
 
 	for _, file := range list {
 		base := filepath.Base(file.Path)
-		assert.Contains(t, files, base)
+		require.Contains(t, files, base)
 	}
 
 	// Test with cancelled context

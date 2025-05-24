@@ -38,8 +38,5 @@ go_test(
     srcs = ["config_test.go"],
     embed = [":config"],
     visibility = ["//visibility:public"],
-    deps = [
-        "@com_github_stretchr_testify//assert",
-        "@com_github_stretchr_testify//require",
-    ],
+    deps = ["@com_github_stretchr_testify//require"],
 )

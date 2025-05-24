@@ -28,7 +28,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
@@ -62,7 +61,7 @@ func TestPolicy_Apply(t *testing.T) {
 	t.Run("empty file list", func(t *testing.T) {
 		toDelete, err := policy.Apply([]file.Info{})
 		require.NoError(t, err)
-		assert.Empty(t, toDelete)
+		require.Empty(t, toDelete)
 	})
 
 	t.Run("basic retention policy", func(t *testing.T) {
@@ -156,7 +155,7 @@ func TestPolicy_Apply(t *testing.T) {
 			"backup-2022-03-15-00-00.tar.gz",
 		}
 
-		assert.Len(t, toDelete, len(expectedToDelete))
+		require.Len(t, toDelete, len(expectedToDelete))
 
 		for _, expected := range expectedToDelete {
 			found := false
@@ -168,7 +167,7 @@ func TestPolicy_Apply(t *testing.T) {
 				}
 			}
 
-			assert.True(
+			require.True(
 				t,
 				found,
 				"Expected file %s to be marked for deletion",
@@ -195,7 +194,7 @@ func TestPolicy_Apply(t *testing.T) {
 
 			toDelete, err := policy.Apply(files)
 			require.NoError(t, err)
-			assert.Empty(t, toDelete)
+			require.Empty(t, toDelete)
 		})
 
 		t.Run("files spanning multiple periods", func(t *testing.T) {
@@ -217,7 +216,7 @@ func TestPolicy_Apply(t *testing.T) {
 
 			toDelete, err := policy.Apply(files)
 			require.NoError(t, err)
-			assert.Empty(t, toDelete)
+			require.Empty(t, toDelete)
 		})
 
 		t.Run("files out of order", func(t *testing.T) {
@@ -235,7 +234,7 @@ func TestPolicy_Apply(t *testing.T) {
 
 			toDelete, err := policy.Apply(files)
 			require.NoError(t, err)
-			assert.Empty(t, toDelete)
+			require.Empty(t, toDelete)
 		})
 	})
 }
@@ -260,14 +259,14 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 			2,
 		)
 
-		assert.Len(t, selected, 2)
-		assert.Empty(t, toDelete)
-		assert.Len(t, unselected, 2)
+		require.Len(t, selected, 2)
+		require.Empty(t, toDelete)
+		require.Len(t, unselected, 2)
 
-		assert.Equal(t, "file1", selected[0].Path)
-		assert.Equal(t, "file2", selected[1].Path)
-		assert.Equal(t, "file3", unselected[0].Path)
-		assert.Equal(t, "file4", unselected[1].Path)
+		require.Equal(t, "file1", selected[0].Path)
+		require.Equal(t, "file2", selected[1].Path)
+		require.Equal(t, "file3", unselected[0].Path)
+		require.Equal(t, "file4", unselected[1].Path)
 	})
 
 	t.Run("empty input", func(t *testing.T) {
@@ -276,9 +275,9 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 			hourGrouper,
 			2,
 		)
-		assert.Empty(t, selected)
-		assert.Empty(t, toDelete)
-		assert.Empty(t, unselected)
+		require.Empty(t, selected)
+		require.Empty(t, toDelete)
+		require.Empty(t, unselected)
 	})
 
 	t.Run("keep all files", func(t *testing.T) {
@@ -294,9 +293,9 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 			2,
 		)
 
-		assert.Len(t, selected, 2)
-		assert.Empty(t, toDelete)
-		assert.Empty(t, unselected)
+		require.Len(t, selected, 2)
+		require.Empty(t, toDelete)
+		require.Empty(t, unselected)
 	})
 }
 
@@ -387,9 +386,9 @@ func TestGroupFilesByTimePeriod(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			groups := groupFilesByTimePeriod(tt.files, tt.grouper)
 			if tt.expected == nil {
-				assert.Nil(t, groups)
+				require.Nil(t, groups)
 			} else {
-				assert.Equal(t, tt.expected, groups)
+				require.Equal(t, tt.expected, groups)
 			}
 		})
 	}

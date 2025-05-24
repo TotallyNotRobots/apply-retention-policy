@@ -30,7 +30,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,22 +58,22 @@ log_level: "debug"
 	t.Run("load from file", func(t *testing.T) {
 		cfg, err = LoadConfig(configFile)
 		require.NoError(t, err)
-		assert.NotNil(t, cfg)
+		require.NotNil(t, cfg)
 
 		// Verify config values
-		assert.Equal(t, 2, cfg.Retention.Hourly)
-		assert.Equal(t, 3, cfg.Retention.Daily)
-		assert.Equal(t, 2, cfg.Retention.Weekly)
-		assert.Equal(t, 2, cfg.Retention.Monthly)
-		assert.Equal(t, 1, cfg.Retention.Yearly)
-		assert.Equal(
+		require.Equal(t, 2, cfg.Retention.Hourly)
+		require.Equal(t, 3, cfg.Retention.Daily)
+		require.Equal(t, 2, cfg.Retention.Weekly)
+		require.Equal(t, 2, cfg.Retention.Monthly)
+		require.Equal(t, 1, cfg.Retention.Yearly)
+		require.Equal(
 			t,
 			"backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz",
 			cfg.FilePattern,
 		)
-		assert.Equal(t, "/backups", cfg.Directory)
-		assert.True(t, cfg.DryRun)
-		assert.Equal(t, "debug", cfg.LogLevel)
+		require.Equal(t, "/backups", cfg.Directory)
+		require.True(t, cfg.DryRun)
+		require.Equal(t, "debug", cfg.LogLevel)
 	})
 
 	t.Run("load from default locations", func(t *testing.T) {
@@ -94,8 +93,8 @@ log_level: "debug"
 
 		cfg, err = LoadConfig("")
 		require.NoError(t, err)
-		assert.NotNil(t, cfg)
-		assert.Equal(
+		require.NotNil(t, cfg)
+		require.Equal(
 			t,
 			"backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz",
 			cfg.FilePattern,
@@ -136,7 +135,7 @@ func TestConfig_Validate(t *testing.T) {
 		}
 
 		err := cfg.Validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("negative retention values", func(t *testing.T) {
@@ -196,7 +195,7 @@ func TestConfig_Validate(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				err := tc.cfg.Validate()
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tc.field)
+				require.Contains(t, err.Error(), tc.field)
 			})
 		}
 	})
@@ -229,7 +228,7 @@ func TestConfig_Validate(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				err := tc.cfg.Validate()
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tc.msg)
+				require.Contains(t, err.Error(), tc.msg)
 			})
 		}
 	})
@@ -249,7 +248,7 @@ func TestConfig_GetRetentionDuration(t *testing.T) {
 
 		duration := cfg.GetRetentionDuration()
 		// Yearly retention should be the longest
-		assert.Equal(t, 365*24*time.Hour, duration)
+		require.Equal(t, 365*24*time.Hour, duration)
 	})
 
 	t.Run("only hourly set", func(t *testing.T) {
@@ -260,7 +259,7 @@ func TestConfig_GetRetentionDuration(t *testing.T) {
 		}
 
 		duration := cfg.GetRetentionDuration()
-		assert.Equal(t, 48*time.Hour, duration)
+		require.Equal(t, 48*time.Hour, duration)
 	})
 
 	t.Run("no retention set", func(t *testing.T) {
@@ -269,7 +268,7 @@ func TestConfig_GetRetentionDuration(t *testing.T) {
 		}
 
 		duration := cfg.GetRetentionDuration()
-		assert.Equal(t, time.Duration(0), duration)
+		require.Equal(t, time.Duration(0), duration)
 	})
 
 	t.Run("mixed periods", func(t *testing.T) {
@@ -285,6 +284,6 @@ func TestConfig_GetRetentionDuration(t *testing.T) {
 
 		duration := cfg.GetRetentionDuration()
 		// Monthly retention should be the longest
-		assert.Equal(t, 30*24*time.Hour, duration)
+		require.Equal(t, 30*24*time.Hour, duration)
 	})
 }
