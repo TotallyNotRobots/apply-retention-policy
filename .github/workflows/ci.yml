@@ -44,7 +44,7 @@ jobs:
       - name: Run tests
         run: |
           bazel coverage --combined_report=lcov //...
-          cp bazel-testlogs/coverage.dat coverage.txt
+          cp bazel-out/_coverage/_coverage_report.dat coverage.txt
         shell: bash
 
       - name: Run linter
