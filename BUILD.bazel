@@ -58,11 +58,11 @@ oci_image(
     name = "image_amd64",
     base = "@distroless_base_amd64",
     entrypoint = ["/usr/local/bin/apply-retention-policy"],
-    tars = [":binary_tar"],
     target_compatible_with = [
         "@platforms//os:linux",
         "@platforms//cpu:x86_64",
     ],
+    tars = [":binary_tar"],
 )
 
 # Create the container image for arm64 (only on non-Windows platforms)

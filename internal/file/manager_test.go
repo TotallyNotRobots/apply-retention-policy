@@ -39,7 +39,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
-	"golang.org/x/sys/unix"
 
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
@@ -64,20 +63,29 @@ func checkACLSupport(t *testing.T) bool {
 	}
 
 	// Try to get ACL support via statfs
-	var stat unix.Statfs_t
+	var stat syscall.Statfs_t
 
-	err := unix.Statfs(".", &stat)
+	err := syscall.Statfs(".", &stat)
 	if err != nil {
 		t.Skip("Cannot check ACL support:", err)
 		return false
 	}
 
+	// These constants are only defined on Linux
+	// We've already checked runtime.GOOS == "linux" above
+	// so this is safe
+	const (
+		XFS_SUPER_MAGIC   = 0x58465342 // XFS filesystem magic number
+		EXT4_SUPER_MAGIC  = 0xEF53     // ext4 filesystem magic number
+		BTRFS_SUPER_MAGIC = 0x9123683E // btrfs filesystem magic number
+	)
+
 	// Check if filesystem supports ACLs
 	// This is a basic check - some filesystems might support ACLs
 	// even if this check fails
-	return stat.Type == unix.XFS_SUPER_MAGIC ||
-		stat.Type == unix.EXT4_SUPER_MAGIC ||
-		stat.Type == unix.BTRFS_SUPER_MAGIC
+	return stat.Type == XFS_SUPER_MAGIC ||
+		stat.Type == EXT4_SUPER_MAGIC ||
+		stat.Type == BTRFS_SUPER_MAGIC
 }
 
 // checkSymlinkSupport checks if the system supports symlinks
@@ -545,12 +553,13 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 		{"other::r--"},
 	}
 	verifyACLs(t, aclPath, entriesToCheck)
-	err = unix.Access(aclPath, unix.W_OK)
 
+	// Check write permission using os.Access instead of unix.Access
+	_, err = os.OpenFile(aclPath, os.O_WRONLY, 0)
 	if err != nil {
-		t.Logf("Warning: unix.Access reports no write permission: %v", err)
+		t.Logf("Warning: os.OpenFile reports no write permission: %v", err)
 	} else {
-		t.Log("unix.Access reports write permission is available")
+		t.Log("os.OpenFile reports write permission is available")
 	}
 
 	aclInfo := Info{
@@ -570,12 +579,7 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 	require.ErrorIs(t, err, os.ErrNotExist)
 }
 
-func testDeleteFileWithACLDenyWrite(
-	ctx context.Context,
-	t *testing.T,
-	manager *Manager,
-	dir string,
-) {
+func testDeleteFileWithACLDenyWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
 	if !checkACLSupport(t) {
 		t.Skip("ACLs not supported on this filesystem")
 	}
@@ -615,12 +619,12 @@ func testDeleteFileWithACLDenyWrite(
 		t.Skipf("Skipping test: unable to chown file to another user: %v", chownErr)
 	}
 
-	err = unix.Access(aclPath, unix.W_OK)
-
+	// Check write permission using os.Access instead of unix.Access
+	_, err = os.OpenFile(aclPath, os.O_WRONLY, 0)
 	if err != nil {
-		t.Log("unix.Access reports no write permission (expected)")
+		t.Log("os.OpenFile reports no write permission (expected)")
 	} else {
-		t.Log("Warning: unix.Access reports write permission is available (unexpected)")
+		t.Log("Warning: os.OpenFile reports write permission is available (unexpected)")
 	}
 
 	aclInfo := Info{
