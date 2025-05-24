@@ -89,15 +89,14 @@ func TestPruneCommand(t *testing.T) {
 	}
 
 	// Create a test config file
-	configContent := `
-retention:
+	configContent := `retention:
   hourly: 2
   daily: 1
   weekly: 0
   monthly: 0
   yearly: 0
 file_pattern: "backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz"
-directory: "` + tmpDir + `"
+directory: "` + filepath.ToSlash(tmpDir) + `"
 dry_run: false
 log_level: "debug"
 `

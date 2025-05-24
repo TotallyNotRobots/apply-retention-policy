@@ -127,7 +127,13 @@ func TestListFiles(t *testing.T) {
 
 	for _, file := range files {
 		path := filepath.Clean(filepath.Join(dir, file))
-		_, err = os.Create(path)
+
+		var f *os.File
+		f, err = os.Create(path)
+		require.NoError(t, err)
+
+		// Ensure file handle is closed immediately after creation
+		err = f.Close()
 		require.NoError(t, err)
 	}
 
@@ -225,7 +231,16 @@ func TestListFiles(t *testing.T) {
 // setupTestFile creates a test file and returns its path and info
 func setupTestFile(t *testing.T, dir string, filename string) (string, Info) {
 	path := filepath.Clean(filepath.Join(dir, filename))
-	_, err := os.Create(path)
+
+	var f *os.File
+
+	var err error
+
+	f, err = os.Create(path)
+	require.NoError(t, err)
+
+	// Ensure file handle is closed immediately after creation
+	err = f.Close()
 	require.NoError(t, err)
 
 	return path, Info{
@@ -292,7 +307,14 @@ func testDeleteRegularFile(
 	path string,
 	info Info,
 ) {
-	err := manager.DeleteFile(ctx, info, false)
+	// Ensure any open file handles are closed before deletion
+	file, err := os.OpenFile(path, os.O_RDONLY, 0)
+	if err == nil {
+		err = file.Close()
+		require.NoError(t, err)
+	}
+
+	err = manager.DeleteFile(ctx, info, false)
 	require.NoError(t, err)
 	_, err = os.Stat(path)
 	require.Error(t, err)
@@ -400,8 +422,18 @@ func testDeleteFileWithGroupWrite(ctx context.Context, t *testing.T, manager *Ma
 
 func testDeleteFileWithOtherWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
 	otherWritePath := filepath.Join(dir, "other-write.zip")
-	_, err := os.Create(otherWritePath)
+
+	var f *os.File
+
+	var err error
+
+	f, err = os.Create(otherWritePath)
 	require.NoError(t, err)
+
+	// Ensure file handle is closed immediately after creation
+	err = f.Close()
+	require.NoError(t, err)
+
 	err = os.Chmod(otherWritePath, 0666)
 	require.NoError(t, err)
 
@@ -410,6 +442,14 @@ func testDeleteFileWithOtherWrite(ctx context.Context, t *testing.T, manager *Ma
 		Timestamp: time.Now(),
 		Size:      0,
 	}
+
+	// Ensure any open file handles are closed before deletion
+	f, err = os.OpenFile(otherWritePath, os.O_RDONLY, 0)
+	if err == nil {
+		err = f.Close()
+		require.NoError(t, err)
+	}
+
 	err = manager.DeleteFile(ctx, otherWriteInfo, false)
 	require.NoError(t, err)
 	_, err = os.Stat(otherWritePath)
