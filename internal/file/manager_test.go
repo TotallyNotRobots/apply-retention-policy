@@ -75,17 +75,17 @@ func checkACLSupport(t *testing.T) bool {
 	// We've already checked runtime.GOOS == "linux" above
 	// so this is safe
 	const (
-		XFS_SUPER_MAGIC   = 0x58465342 // XFS filesystem magic number
-		EXT4_SUPER_MAGIC  = 0xEF53     // ext4 filesystem magic number
-		BTRFS_SUPER_MAGIC = 0x9123683E // btrfs filesystem magic number
+		xfsSuperMagic   = 0x58465342 // XFS filesystem magic number
+		ext4SuperMagic  = 0xEF53     // ext4 filesystem magic number
+		btrfsSuperMagic = 0x9123683E // btrfs filesystem magic number
 	)
 
 	// Check if filesystem supports ACLs
 	// This is a basic check - some filesystems might support ACLs
 	// even if this check fails
-	return stat.Type == XFS_SUPER_MAGIC ||
-		stat.Type == EXT4_SUPER_MAGIC ||
-		stat.Type == BTRFS_SUPER_MAGIC
+	return stat.Type == xfsSuperMagic ||
+		stat.Type == ext4SuperMagic ||
+		stat.Type == btrfsSuperMagic
 }
 
 // checkSymlinkSupport checks if the system supports symlinks
@@ -579,7 +579,12 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 	require.ErrorIs(t, err, os.ErrNotExist)
 }
 
-func testDeleteFileWithACLDenyWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+func testDeleteFileWithACLDenyWrite(
+	ctx context.Context,
+	t *testing.T,
+	manager *Manager,
+	dir string,
+) {
 	if !checkACLSupport(t) {
 		t.Skip("ACLs not supported on this filesystem")
 	}
