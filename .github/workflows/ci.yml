@@ -32,9 +32,9 @@ jobs:
           go-version: ${{ matrix.go-version }}
           check-latest: true
 
-      - name: Run tests
+      - name: Run tests (${{ runner.os }})
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
+          if [ "${{ runner.os }}" = "windows" ]; then
             bazel test //...
           else
             bazel coverage --combined_report=lcov //...
