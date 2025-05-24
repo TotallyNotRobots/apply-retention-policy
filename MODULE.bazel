@@ -21,7 +21,7 @@ bazel_dep(name = "buildifier_prebuilt", version = "6.4.0")
 
 # Register Go toolchain
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.23.4")
+go_sdk.download(version = "1.22.1")
 
 # Register Go dependencies
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
