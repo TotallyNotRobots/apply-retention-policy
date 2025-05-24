@@ -58,12 +58,12 @@ oci_image(
     name = "image_amd64",
     base = "@distroless_base_amd64",
     entrypoint = ["/usr/local/bin/apply-retention-policy"],
-    tars = [":binary_tar"],
     target_compatible_with = select({
         "@platforms//os:windows": ["@zstd_windows_amd64//:zstd_toolchain"],
         "@platforms//os:linux": ["@zstd_linux_amd64//:zstd_toolchain"],
         "@platforms//os:osx": ["@zstd_darwin_amd64//:zstd_toolchain"],
     }),
+    tars = [":binary_tar"],
 )
 
 # Create the container image for arm64 (only on non-Windows platforms)

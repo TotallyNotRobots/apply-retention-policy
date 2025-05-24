@@ -9,6 +9,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 
+"""Bazel module for the apply-retention-policy tool."""
+
 module(name = "apply-retention-policy")
 
 bazel_dep(name = "rules_go", version = "0.54.0")
@@ -44,4 +46,46 @@ use_repo(oci, "distroless_base_amd64", "distroless_base_arm64")
 
 # Register zstd toolchains using the extension mechanism
 zstd = use_extension("@aspect_bazel_lib//lib:zstd_toolchain.bzl", "zstd_toolchain")
+zstd.toolchain(
+    name = "zstd_darwin_amd64",
+    target_compatible_with = [
+        "@platforms//os:osx",
+        "@platforms//cpu:x86_64",
+    ],
+)
+zstd.toolchain(
+    name = "zstd_darwin_arm64",
+    target_compatible_with = [
+        "@platforms//os:osx",
+        "@platforms//cpu:aarch64",
+    ],
+)
+zstd.toolchain(
+    name = "zstd_linux_amd64",
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+zstd.toolchain(
+    name = "zstd_linux_arm64",
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+)
+zstd.toolchain(
+    name = "zstd_windows_amd64",
+    target_compatible_with = [
+        "@platforms//os:windows",
+        "@platforms//cpu:x86_64",
+    ],
+)
+zstd.toolchain(
+    name = "zstd_windows_arm64",
+    target_compatible_with = [
+        "@platforms//os:windows",
+        "@platforms//cpu:aarch64",
+    ],
+)
 use_repo(zstd, "zstd_darwin_amd64", "zstd_darwin_arm64", "zstd_linux_amd64", "zstd_linux_arm64", "zstd_windows_amd64", "zstd_windows_arm64")
