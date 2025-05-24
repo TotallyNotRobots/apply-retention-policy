@@ -34,8 +34,12 @@ jobs:
 
       - name: Run tests
         run: |
-          bazel coverage --combined_report=lcov //...
-          cp bazel-out/_coverage/_coverage_report.dat coverage.txt
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            bazel test //...
+          else
+            bazel coverage --combined_report=lcov //...
+            cp bazel-out/_coverage/_coverage_report.dat coverage.txt
+          fi
         shell: bash
 
       - name: Run linter
