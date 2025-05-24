@@ -58,11 +58,15 @@ const (
 
 // checkACLSupport checks if the system supports ACLs
 func checkACLSupport(t *testing.T) bool {
+	if runtime.GOOS != platformLinux {
+		t.Skip("ACL support check is only implemented for Linux")
+		return false
+	}
+
 	// Try to get ACL support via statfs
 	var stat unix.Statfs_t
 
 	err := unix.Statfs(".", &stat)
-
 	if err != nil {
 		t.Skip("Cannot check ACL support:", err)
 		return false
