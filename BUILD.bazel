@@ -71,11 +71,11 @@ oci_image(
     name = "image_arm64",
     base = "@distroless_base_arm64",
     entrypoint = ["/usr/local/bin/apply-retention-policy"],
-    tars = [":binary_tar"],
     target_compatible_with = select({
         ":windows": ["@platforms//:incompatible"],
         "//conditions:default": [],
     }),
+    tars = [":binary_tar"],
 )
 
 # Create a multi-arch image index
