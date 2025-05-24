@@ -16,26 +16,26 @@ jobs:
         go-version: [1.23.x]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Cache Bazel cache
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/bazel
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: bazel-cache-${{ runner.os }}-
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
         with:
           go-version: ${{ matrix.go-version }}
           check-latest: true
 
       - name: Set up Bazel
-        uses: bazelbuild/setup-bazelisk@v3
+        uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2 # v3
 
       - name: Restore Bazel cache (if available)
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/bazel
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
@@ -48,13 +48,13 @@ jobs:
         shell: bash
 
       - name: Run linter
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
         with:
           version: latest
           args: --config=.golangci.yml
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.txt
