@@ -309,10 +309,10 @@ func testDeleteRegularFile(
 ) {
 	// Ensure any open file handles are closed before deletion
 	file, err := os.OpenFile(path, os.O_RDONLY, 0)
-	if err == nil {
-		err = file.Close()
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
+	err = file.Close()
+	require.NoError(t, err)
 
 	err = manager.DeleteFile(ctx, info, false)
 	require.NoError(t, err)
