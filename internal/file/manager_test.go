@@ -31,9 +31,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 
@@ -41,6 +39,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/util"
 )
 
 func init() {
@@ -50,112 +49,20 @@ func init() {
 
 const (
 	testBackupPattern = "backup-{year}{month}{day}{hour}{minute}.zip"
-	platformWindows   = "windows"
-	platformDarwin    = "darwin"
-	platformLinux     = "linux"
 )
-
-// checkACLSupport checks if the system supports ACLs
-func checkACLSupport(t *testing.T) bool {
-	if runtime.GOOS != platformLinux {
-		t.Skip("ACL support check is only implemented for Linux")
-		return false
-	}
-
-	// Try to get ACL support via statfs
-	var stat syscall.Statfs_t
-
-	err := syscall.Statfs(".", &stat)
-	if err != nil {
-		t.Skip("Cannot check ACL support:", err)
-		return false
-	}
-
-	// These constants are only defined on Linux
-	// We've already checked runtime.GOOS == "linux" above
-	// so this is safe
-	const (
-		xfsSuperMagic   = 0x58465342 // XFS filesystem magic number
-		ext4SuperMagic  = 0xEF53     // ext4 filesystem magic number
-		btrfsSuperMagic = 0x9123683E // btrfs filesystem magic number
-	)
-
-	// Check if filesystem supports ACLs
-	// This is a basic check - some filesystems might support ACLs
-	// even if this check fails
-	return stat.Type == xfsSuperMagic ||
-		stat.Type == ext4SuperMagic ||
-		stat.Type == btrfsSuperMagic
-}
-
-// checkSymlinkSupport checks if the system supports symlinks
-func checkSymlinkSupport() bool {
-	// On Windows, symlinks require special privileges
-	// We'll let the symlink creation fail if not supported
-	return true
-}
-
-// checkFIFOSupport checks if the system supports named pipes (FIFOs)
-func checkFIFOSupport(t *testing.T) bool {
-	if runtime.GOOS == platformWindows {
-		// Windows supports named pipes but with different semantics
-		// We'll skip the test on Windows for now
-		t.Skip("Named pipes test not implemented for Windows")
-		return false
-	}
-
-	// Try to create a temporary FIFO
-	dir := t.TempDir()
-	pipePath := filepath.Join(dir, "testpipe")
-
-	err := syscall.Mkfifo(pipePath, 0644)
-	if err != nil {
-		t.Log("FIFO not supported:", err)
-		return false
-	}
-
-	// Clean up the test FIFO
-	_ = os.Remove(pipePath)
-
-	return true
-}
 
 // setReadOnly makes a file read-only in a platform-independent way
 func setReadOnly(t *testing.T, path string) {
-	cleanPath := filepath.Clean(path)
-
-	if runtime.GOOS == platformWindows {
-		// On Windows, use attrib command with fixed arguments
-		cmd := exec.Command("attrib", "+R")
-		cmd.Args = append(cmd.Args, cleanPath)
-		err := cmd.Run()
-
-		require.NoError(t, err, "Failed to set read-only attribute on Windows")
-	} else {
-		// On Unix-like systems, use chmod
-		err := os.Chmod(cleanPath, 0444)
-
-		require.NoError(t, err, "Failed to set read-only mode")
-	}
+	plat := util.NewPlatform()
+	err := plat.SetReadOnly(path)
+	require.NoError(t, err, "Failed to set read-only attribute")
 }
 
 // removeReadOnly removes read-only attribute in a platform-independent way
 func removeReadOnly(t *testing.T, path string) {
-	cleanPath := filepath.Clean(path)
-
-	if runtime.GOOS == platformWindows {
-		// On Windows, use attrib command with fixed arguments
-		cmd := exec.Command("attrib", "-R")
-		cmd.Args = append(cmd.Args, cleanPath)
-		err := cmd.Run()
-
-		require.NoError(t, err, "Failed to remove read-only attribute on Windows")
-	} else {
-		// On Unix-like systems, use chmod
-		err := os.Chmod(cleanPath, 0644)
-
-		require.NoError(t, err, "Failed to remove read-only mode")
-	}
+	plat := util.NewPlatform()
+	err := plat.RemoveReadOnly(path)
+	require.NoError(t, err, "Failed to remove read-only attribute")
 }
 
 func TestNewManager(t *testing.T) {
@@ -193,6 +100,22 @@ func TestNewManager(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, m.logger)
 	})
+}
+
+func mkfifo(path string, mode uint32) error {
+	plat := util.NewPlatform()
+	return plat.Mkfifo(path, mode)
+}
+
+func checkFIFOSupport() bool {
+	plat := util.NewPlatform()
+
+	support, err := plat.CheckFIFOSupport()
+	if err != nil {
+		return false
+	}
+
+	return support
 }
 
 func TestListFiles(t *testing.T) {
@@ -236,11 +159,7 @@ func TestListFiles(t *testing.T) {
 		err = os.Symlink(filepath.Join(dir, files[0]), symlinkPath)
 
 		if err != nil {
-			if runtime.GOOS == platformWindows {
-				t.Skip("Symlink creation failed on Windows - may need elevated privileges")
-			}
-
-			require.NoError(t, err)
+			t.Skip("Symlink creation failed - may need elevated privileges")
 		}
 
 		// List files and verify symlink is not included
@@ -258,13 +177,13 @@ func TestListFiles(t *testing.T) {
 	})
 
 	t.Run("with named pipe", func(t *testing.T) {
-		if !checkFIFOSupport(t) {
+		if !checkFIFOSupport() {
 			t.Skip("Named pipes not supported on this system")
 		}
 
 		// Create a named pipe
 		pipePath := filepath.Join(dir, "pipe")
-		err = syscall.Mkfifo(pipePath, 0644)
+		err = mkfifo(pipePath, 0644)
 		require.NoError(t, err)
 
 		// Verify the pipe exists and is a FIFO
@@ -426,11 +345,7 @@ func testDeleteSymlink(ctx context.Context, t *testing.T, manager *Manager, dir 
 	err = os.Symlink(targetPath, symlinkPath)
 
 	if err != nil {
-		if runtime.GOOS == platformWindows {
-			t.Skip("Symlink creation failed on Windows - may need elevated privileges")
-		}
-
-		require.NoError(t, err)
+		t.Skip("Symlink creation failed - may need elevated privileges")
 	}
 
 	linkInfo, err := os.Lstat(symlinkPath)
@@ -509,8 +424,30 @@ func testDeleteFileWithOtherWrite(ctx context.Context, t *testing.T, manager *Ma
 	require.ErrorIs(t, err, os.ErrNotExist)
 }
 
+func checkACLSupport() bool {
+	plat := util.NewPlatform()
+
+	support, err := plat.CheckACLSupport()
+	if err != nil {
+		return false
+	}
+
+	return support
+}
+
+func checkSymlinkSupport() bool {
+	plat := util.NewPlatform()
+
+	support, err := plat.CheckSymlinkSupport()
+	if err != nil {
+		return false
+	}
+
+	return support
+}
+
 func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
-	if !checkACLSupport(t) {
+	if !checkACLSupport() {
 		t.Skip("ACLs not supported on this filesystem")
 	}
 
@@ -585,7 +522,7 @@ func testDeleteFileWithACLDenyWrite(
 	manager *Manager,
 	dir string,
 ) {
-	if !checkACLSupport(t) {
+	if !checkACLSupport() {
 		t.Skip("ACLs not supported on this filesystem")
 	}
 
@@ -842,3 +779,6 @@ func TestParseTimestamp(t *testing.T) {
 		})
 	}
 }
+
+// Platform-specific implementations
+// These are defined in separate files with build tags

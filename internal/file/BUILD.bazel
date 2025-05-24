@@ -40,6 +40,7 @@ go_test(
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/logger",
+        "//pkg/util",
         "@com_github_stretchr_testify//require",
         "@org_uber_go_zap//:zap",
     ],

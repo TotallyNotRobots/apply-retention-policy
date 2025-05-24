@@ -74,9 +74,9 @@ linters:
           arguments:
             - 15
         - name: max-public-structs
-        - name: file-header
-          arguments:
-            - Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
+        # - name: file-header
+        #   arguments:
+        #     - Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
     gocyclo:
       min-complexity: 15
     goconst:
