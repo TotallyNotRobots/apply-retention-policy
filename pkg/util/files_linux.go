@@ -1,5 +1,5 @@
-//go:build !windows
-// +build !windows
+//go:build linux
+// +build linux
 
 /*
 The MIT License (MIT)
@@ -30,22 +30,21 @@ package util
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"syscall"
 
 	"golang.org/x/sys/unix"
 )
 
 // UnixPlatform implements Platform for Unix-like systems
-type UnixPlatform struct{}
+type LinuxPlatform struct{}
 
 // NewPlatform returns a new Platform implementation for the current system
 func NewPlatform() Platform {
-	return &UnixPlatform{}
+	return &LinuxPlatform{}
 }
 
 // Statfs implements Platform.Statfs for Unix-like systems
-func (p *UnixPlatform) Statfs(path string, stat *FileSystemStats) error {
+func (p *LinuxPlatform) Statfs(path string, stat *FileSystemStats) error {
 	var unixStat syscall.Statfs_t
 
 	err := syscall.Statfs(path, &unixStat)
@@ -59,12 +58,12 @@ func (p *UnixPlatform) Statfs(path string, stat *FileSystemStats) error {
 }
 
 // Mkfifo implements Platform.Mkfifo for Unix-like systems
-func (p *UnixPlatform) Mkfifo(path string, mode uint32) error {
+func (p *LinuxPlatform) Mkfifo(path string, mode uint32) error {
 	return syscall.Mkfifo(path, mode)
 }
 
 // GetSupportedFsTypes implements Platform.GetSupportedFsTypes for Unix systems
-func (p *UnixPlatform) GetSupportedFsTypes() []int64 {
+func (p *LinuxPlatform) GetSupportedFsTypes() []int64 {
 	return []int64{
 		int64(unix.XFS_SUPER_MAGIC),
 		int64(unix.EXT4_SUPER_MAGIC),
@@ -73,11 +72,7 @@ func (p *UnixPlatform) GetSupportedFsTypes() []int64 {
 }
 
 // CheckACLSupport implements Platform.CheckACLSupport for Unix systems
-func (p *UnixPlatform) CheckACLSupport() (bool, error) {
-	if runtime.GOOS != "linux" {
-		return false, nil
-	}
-
+func (p *LinuxPlatform) CheckACLSupport() (bool, error) {
 	var stat FileSystemStats
 
 	err := p.Statfs(".", &stat)
@@ -94,21 +89,21 @@ func (p *UnixPlatform) CheckACLSupport() (bool, error) {
 	return false, nil
 }
 
-func (p *UnixPlatform) CheckSymlinkSupport() (bool, error) {
+func (p *LinuxPlatform) CheckSymlinkSupport() (bool, error) {
 	return true, nil
 }
 
 // CheckFIFOSupport implements Platform.CheckFIFOSupport for Unix systems
-func (p *UnixPlatform) CheckFIFOSupport() (bool, error) {
+func (p *LinuxPlatform) CheckFIFOSupport() (bool, error) {
 	return true, nil
 }
 
 // SetReadOnly implements Platform.SetReadOnly for Unix systems
-func (p *UnixPlatform) SetReadOnly(path string) error {
+func (p *LinuxPlatform) SetReadOnly(path string) error {
 	return os.Chmod(filepath.Clean(path), 0444)
 }
 
 // RemoveReadOnly implements Platform.RemoveReadOnly for Unix systems
-func (p *UnixPlatform) RemoveReadOnly(path string) error {
+func (p *LinuxPlatform) RemoveReadOnly(path string) error {
 	return os.Chmod(filepath.Clean(path), 0644)
 }

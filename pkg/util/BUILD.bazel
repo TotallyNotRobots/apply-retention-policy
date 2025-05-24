@@ -26,56 +26,24 @@ go_library(
     name = "util",
     srcs = [
         "files.go",
-        "files_unix.go",
+        "files_darwin.go",
+        "files_linux.go",
         "files_windows.go",
         "must.go",
     ],
     importpath = "github.com/TotallyNotRobots/apply-retention-policy/pkg/util",
     visibility = ["//visibility:public"],
     deps = select({
-        "@rules_go//go/platform:aix": [
-            "@org_golang_x_sys//unix",
-        ],
         "@rules_go//go/platform:android": [
             "@org_golang_x_sys//unix",
         ],
         "@rules_go//go/platform:darwin": [
             "@org_golang_x_sys//unix",
         ],
-        "@rules_go//go/platform:dragonfly": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:freebsd": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:illumos": [
-            "@org_golang_x_sys//unix",
-        ],
         "@rules_go//go/platform:ios": [
             "@org_golang_x_sys//unix",
         ],
-        "@rules_go//go/platform:js": [
-            "@org_golang_x_sys//unix",
-        ],
         "@rules_go//go/platform:linux": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:netbsd": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:openbsd": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:osx": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:plan9": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:qnx": [
-            "@org_golang_x_sys//unix",
-        ],
-        "@rules_go//go/platform:solaris": [
             "@org_golang_x_sys//unix",
         ],
         "//conditions:default": [],
