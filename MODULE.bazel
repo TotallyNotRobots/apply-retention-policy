@@ -44,4 +44,4 @@ use_repo(oci, "distroless_base_amd64", "distroless_base_arm64")
 
 # Register zstd toolchains using the extension mechanism
 zstd = use_extension("@aspect_bazel_lib//lib:zstd_toolchain.bzl", "zstd_toolchain")
-use_repo(zstd, "zstd_darwin_amd64", "zstd_darwin_arm64", "zstd_linux_amd64", "zstd_linux_arm64", "zstd_windows_amd64")
+use_repo(zstd, "zstd_darwin_amd64", "zstd_darwin_arm64", "zstd_linux_amd64", "zstd_linux_arm64", "zstd_windows_amd64", "zstd_windows_arm64")
