@@ -29,7 +29,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/logger",
-        "@org_golang_x_sys//unix",
         "@org_uber_go_zap//:zap",
     ],
 )
@@ -41,7 +40,6 @@ go_test(
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/logger",
-        "@com_github_stretchr_testify//assert",
         "@com_github_stretchr_testify//require",
         "@org_golang_x_sys//unix",
         "@org_uber_go_zap//:zap",

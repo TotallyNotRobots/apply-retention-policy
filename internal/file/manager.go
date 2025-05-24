@@ -41,8 +41,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"golang.org/x/sys/unix"
-
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
 
@@ -125,7 +123,7 @@ func NewManager(
 	return m, nil
 }
 
-// isRegularFile checks if the file is a regular file and the current user has write access
+// isRegularFile checks if the file is a regular file
 func (m *Manager) isRegularFile(path string) error {
 	// Get file info
 	info, err := os.Lstat(path)
@@ -136,13 +134,6 @@ func (m *Manager) isRegularFile(path string) error {
 	// Check if it's a regular file
 	if !info.Mode().IsRegular() {
 		return fmt.Errorf("%w: %s is not a regular file", ErrNotRegularFile, path)
-	}
-
-	// Check if we have write permission using os.Access
-	// This properly handles group and other permissions
-	err = unix.Access(path, unix.W_OK)
-	if err != nil {
-		return fmt.Errorf("%w: no write permission for %s", ErrAccessDenied, path)
 	}
 
 	// All checks passed
@@ -177,8 +168,13 @@ func (m *Manager) DeleteFile(
 		return err
 	}
 
-	// Delete the file
+	// Attempt to delete the file
 	if err := os.Remove(file.Path); err != nil {
+		// Check for permission denied
+		if os.IsPermission(err) {
+			return fmt.Errorf("%w %s: %w", ErrAccessDenied, file.Path, err)
+		}
+
 		return fmt.Errorf("%w %s: %w", ErrDeleteFile, file.Path, err)
 	}
 

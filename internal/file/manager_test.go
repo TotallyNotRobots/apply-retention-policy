@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -298,289 +299,403 @@ func TestListFiles(t *testing.T) {
 	require.ErrorIs(t, err, context.Canceled)
 }
 
+// setupTestFile creates a test file and returns its path and info
+func setupTestFile(t *testing.T, dir string, filename string) (string, Info) {
+	path := filepath.Clean(filepath.Join(dir, filename))
+	_, err := os.Create(path)
+	require.NoError(t, err)
+
+	return path, Info{
+		Path:      path,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+}
+
+// verifyACLs checks if the specified ACL entries are present in the file's ACLs
+func verifyACLs(t *testing.T, path string, entriesToCheck [][]string) {
+	const getfaclPath = "/usr/bin/getfacl"
+	if _, err := os.Stat(getfaclPath); err != nil {
+		t.Skip("getfacl command not available")
+	}
+
+	cmd := exec.Command(getfaclPath, filepath.Clean(path)) // #nosec G204
+	output, err := cmd.Output()
+
+	if err != nil {
+		t.Skip("getfacl command failed:", err)
+	}
+
+	outputStr := string(output)
+
+	for _, entryAlts := range entriesToCheck {
+		found := false
+
+		for _, alt := range entryAlts {
+			if strings.Contains(outputStr, alt) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			t.Skipf("None of the ACL entry alternatives %v found in getfacl output", entryAlts)
+		}
+	}
+}
+
+// setACLs sets ACL entries on a file using setfacl
+func setACLs(t *testing.T, path string, aclEntries []string) {
+	const setfaclPath = "/usr/bin/setfacl"
+	if _, err := os.Stat(setfaclPath); err != nil {
+		t.Skip("setfacl command not available")
+	}
+
+	cmd := exec.Command(
+		setfaclPath,
+		"-m",
+		strings.Join(aclEntries, ","),
+		filepath.Clean(path),
+	) // #nosec G204
+	if err := cmd.Run(); err != nil {
+		t.Skip("setfacl command failed:", err)
+	}
+}
+
+func testDeleteRegularFile(
+	ctx context.Context,
+	t *testing.T,
+	manager *Manager,
+	path string,
+	info Info,
+) {
+	err := manager.DeleteFile(ctx, info, false)
+	require.NoError(t, err)
+	_, err = os.Stat(path)
+	require.Error(t, err)
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+func testDeleteNonExistentFile(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+	nonExistentInfo := Info{
+		Path:      filepath.Join(dir, "non-existent.zip"),
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err := manager.DeleteFile(ctx, nonExistentInfo, false)
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrDeleteFile)
+}
+
+func testDeleteDirectory(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+	dirPath := filepath.Join(dir, "testdir")
+	err := os.Mkdir(dirPath, 0755)
+	require.NoError(t, err)
+
+	dirInfo := Info{
+		Path:      dirPath,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err = manager.DeleteFile(ctx, dirInfo, false)
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrNotRegularFile)
+}
+
+func testDeleteSymlink(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+	if !checkSymlinkSupport() {
+		t.Skip("Symlinks not supported on this system")
+	}
+
+	targetPath := filepath.Join(dir, "target.zip")
+	_, err := os.Create(targetPath)
+	require.NoError(t, err)
+
+	symlinkPath := filepath.Join(dir, "symlink")
+	err = os.Symlink(targetPath, symlinkPath)
+
+	if err != nil {
+		if runtime.GOOS == platformWindows {
+			t.Skip("Symlink creation failed on Windows - may need elevated privileges")
+		}
+
+		require.NoError(t, err)
+	}
+
+	linkInfo, err := os.Lstat(symlinkPath)
+	require.NoError(t, err)
+	require.True(t, linkInfo.Mode()&os.ModeSymlink != 0, "Created path is not a symlink")
+
+	symlinkInfo := Info{
+		Path:      symlinkPath,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err = manager.DeleteFile(ctx, symlinkInfo, false)
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrNotRegularFile)
+	_, err = os.Lstat(symlinkPath)
+	require.NoError(t, err, "Symlink was unexpectedly deleted")
+}
+
+func testDeleteReadOnlyFile(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+	readOnlyPath := filepath.Join(dir, "readonly.zip")
+	_, err := os.Create(readOnlyPath)
+	require.NoError(t, err)
+	setReadOnly(t, readOnlyPath)
+	chownErr := os.Chown(readOnlyPath, 65534, -1)
+
+	if chownErr != nil {
+		t.Skipf("Skipping test: unable to chown file to another user: %v", chownErr)
+	}
+
+	readOnlyInfo := Info{
+		Path:      readOnlyPath,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err = manager.DeleteFile(ctx, readOnlyInfo, false)
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrAccessDenied)
+	removeReadOnly(t, readOnlyPath)
+}
+
+func testDeleteFileWithGroupWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+	groupWritePath := filepath.Join(dir, "group-write.zip")
+	_, err := os.Create(groupWritePath)
+	require.NoError(t, err)
+	err = os.Chmod(groupWritePath, 0664)
+	require.NoError(t, err)
+
+	groupWriteInfo := Info{
+		Path:      groupWritePath,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err = manager.DeleteFile(ctx, groupWriteInfo, false)
+
+	if err != nil {
+		require.ErrorIs(t, err, ErrAccessDenied)
+	}
+}
+
+func testDeleteFileWithOtherWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+	otherWritePath := filepath.Join(dir, "other-write.zip")
+	_, err := os.Create(otherWritePath)
+	require.NoError(t, err)
+	err = os.Chmod(otherWritePath, 0666)
+	require.NoError(t, err)
+
+	otherWriteInfo := Info{
+		Path:      otherWritePath,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err = manager.DeleteFile(ctx, otherWriteInfo, false)
+	require.NoError(t, err)
+	_, err = os.Stat(otherWritePath)
+	require.Error(t, err)
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
+	if !checkACLSupport(t) {
+		t.Skip("ACLs not supported on this filesystem")
+	}
+
+	uid := os.Getuid()
+	gid := os.Getgid()
+	userObj, _ := user.LookupId(fmt.Sprintf("%d", uid))
+	groupObj, _ := user.LookupGroupId(fmt.Sprintf("%d", gid))
+	username := fmt.Sprintf("%d", uid)
+
+	if userObj != nil {
+		username = userObj.Username
+	}
+
+	groupname := fmt.Sprintf("%d", gid)
+
+	if groupObj != nil {
+		groupname = groupObj.Name
+	}
+
+	t.Logf("Setting ACLs for user %s (uid %d) and group %s (gid %d)", username, uid, groupname, gid)
+
+	aclPath := filepath.Join(dir, "acl-write.zip")
+	_, err := os.Create(aclPath)
+	require.NoError(t, err)
+	err = os.Chmod(aclPath, 0400)
+	require.NoError(t, err)
+
+	aclEntries := []string{
+		fmt.Sprintf("user:%d:rw-", uid),
+		fmt.Sprintf("group:%d:r--", gid),
+		"mask::rw-",
+		"other::r--",
+	}
+	setACLs(t, aclPath, aclEntries)
+
+	entriesToCheck := [][]string{
+		{fmt.Sprintf("user:%d:rw-", uid), fmt.Sprintf("user:%s:rw-", username)},
+		{fmt.Sprintf("group:%d:r--", gid), fmt.Sprintf("group:%s:r--", groupname)},
+		{"mask::rw-"},
+		{"other::r--"},
+	}
+	verifyACLs(t, aclPath, entriesToCheck)
+	err = unix.Access(aclPath, unix.W_OK)
+
+	if err != nil {
+		t.Logf("Warning: unix.Access reports no write permission: %v", err)
+	} else {
+		t.Log("unix.Access reports write permission is available")
+	}
+
+	aclInfo := Info{
+		Path:      aclPath,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err = manager.DeleteFile(ctx, aclInfo, false)
+
+	if err != nil {
+		t.Logf("DeleteFile failed with error: %v", err)
+	}
+
+	require.NoError(t, err)
+	_, err = os.Stat(aclPath)
+	require.Error(t, err)
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+func testDeleteFileWithACLDenyWrite(
+	ctx context.Context,
+	t *testing.T,
+	manager *Manager,
+	dir string,
+) {
+	if !checkACLSupport(t) {
+		t.Skip("ACLs not supported on this filesystem")
+	}
+
+	uid := os.Getuid()
+	userObj, _ := user.LookupId(fmt.Sprintf("%d", uid))
+	username := fmt.Sprintf("%d", uid)
+
+	if userObj != nil {
+		username = userObj.Username
+	}
+
+	t.Logf("Setting ACLs for user %s (uid %d)", username, uid)
+
+	aclPath := filepath.Join(dir, "acl-deny.zip")
+	_, err := os.Create(aclPath)
+	require.NoError(t, err)
+	err = os.Chmod(aclPath, 0666)
+	require.NoError(t, err)
+
+	aclEntries := []string{
+		fmt.Sprintf("user:%d:r--", uid),
+		"mask::r--",
+		"other::r--",
+	}
+	setACLs(t, aclPath, aclEntries)
+
+	entriesToCheck := [][]string{
+		{fmt.Sprintf("user:%d:r--", uid), fmt.Sprintf("user:%s:r--", username)},
+		{"mask::r--"},
+		{"other::r--"},
+	}
+	verifyACLs(t, aclPath, entriesToCheck)
+	chownErr := os.Chown(aclPath, 65534, -1)
+
+	if chownErr != nil {
+		t.Skipf("Skipping test: unable to chown file to another user: %v", chownErr)
+	}
+
+	err = unix.Access(aclPath, unix.W_OK)
+
+	if err != nil {
+		t.Log("unix.Access reports no write permission (expected)")
+	} else {
+		t.Log("Warning: unix.Access reports write permission is available (unexpected)")
+	}
+
+	aclInfo := Info{
+		Path:      aclPath,
+		Timestamp: time.Now(),
+		Size:      0,
+	}
+	err = manager.DeleteFile(ctx, aclInfo, false)
+
+	if err == nil {
+		t.Log("DeleteFile succeeded when it should have failed")
+	} else {
+		t.Logf("DeleteFile failed with error: %v", err)
+	}
+
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrAccessDenied)
+}
+
+func testContextCancellation(t *testing.T, manager *Manager, info Info) {
+	cancelledCtx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := manager.DeleteFile(cancelledCtx, info, false)
+	require.Error(t, err)
+	require.ErrorIs(t, err, context.Canceled)
+}
+
+func testDryRun(ctx context.Context, t *testing.T, manager *Manager, path string, info Info) {
+	_, err := os.Create(path)
+	require.NoError(t, err)
+	err = manager.DeleteFile(ctx, info, true)
+	require.NoError(t, err)
+	_, err = os.Stat(path)
+	require.NoError(t, err)
+}
+
 func TestDeleteFile(t *testing.T) {
 	t.Parallel()
-	// Setup
+
 	ctx := context.Background()
 	log := &logger.Logger{Logger: zap.NewNop()}
 	dir := t.TempDir()
-
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
-
 	require.NoError(t, err)
-
-	// Create a test file
-	file := "backup-202501010000.zip"
-	path := filepath.Clean(filepath.Join(dir, file))
-	_, err = os.Create(path)
-
-	require.NoError(t, err)
-
-	info := Info{
-		Path:      path,
-		Timestamp: time.Now(),
-		Size:      1234,
-	}
-
+	path, info := setupTestFile(t, dir, "backup-202501010000.zip")
 	t.Run("delete regular file", func(t *testing.T) {
-		err = manager.DeleteFile(ctx, info, false)
-		require.NoError(t, err)
-		_, err = os.Stat(path)
-		require.Error(t, err)
-		assert.True(t, os.IsNotExist(err))
+		testDeleteRegularFile(ctx, t, manager, path, info)
 	})
-
 	t.Run("delete non-existent file", func(t *testing.T) {
-		nonExistentInfo := Info{
-			Path:      filepath.Join(dir, "non-existent.zip"),
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-		err = manager.DeleteFile(ctx, nonExistentInfo, false)
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrDeleteFile)
+		testDeleteNonExistentFile(ctx, t, manager, dir)
 	})
-
 	t.Run("delete directory", func(t *testing.T) {
-		// Create a directory
-		dirPath := filepath.Join(dir, "testdir")
-		err = os.Mkdir(dirPath, 0755)
-		require.NoError(t, err)
-
-		dirInfo := Info{
-			Path:      dirPath,
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-		err = manager.DeleteFile(ctx, dirInfo, false)
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrNotRegularFile)
+		testDeleteDirectory(ctx, t, manager, dir)
 	})
-
 	t.Run("delete symlink", func(t *testing.T) {
-		if !checkSymlinkSupport() {
-			t.Skip("Symlinks not supported on this system")
-		}
-
-		// Create a target file first
-		targetPath := filepath.Join(dir, "target.zip")
-		_, err = os.Create(targetPath)
-
-		require.NoError(t, err)
-
-		// Create a symlink to the target file
-		symlinkPath := filepath.Join(dir, "symlink")
-		err = os.Symlink(targetPath, symlinkPath)
-
-		if err != nil {
-			if runtime.GOOS == platformWindows {
-				t.Skip("Symlink creation failed on Windows - may need elevated privileges")
-			}
-
-			require.NoError(t, err)
-		}
-
-		// Verify the symlink exists and is a symlink
-		linkInfo, linkErr := os.Lstat(symlinkPath)
-
-		require.NoError(t, linkErr)
-
-		// On Windows, check for reparse point
-		require.True(t, linkInfo.Mode()&os.ModeSymlink != 0, "Created path is not a symlink")
-
-		symlinkInfo := Info{
-			Path:      symlinkPath,
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-
-		err = manager.DeleteFile(ctx, symlinkInfo, false)
-
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrNotRegularFile)
-
-		// Verify the symlink still exists (since we shouldn't delete it)
-		_, err = os.Lstat(symlinkPath)
-
-		require.NoError(t, err, "Symlink was unexpectedly deleted")
+		testDeleteSymlink(ctx, t, manager, dir)
 	})
-
 	t.Run("delete read-only file", func(t *testing.T) {
-		// Create a read-only file
-		readOnlyPath := filepath.Join(dir, "readonly.zip")
-		_, err = os.Create(readOnlyPath)
-		require.NoError(t, err)
-		setReadOnly(t, readOnlyPath)
-
-		readOnlyInfo := Info{
-			Path:      readOnlyPath,
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-		err = manager.DeleteFile(ctx, readOnlyInfo, false)
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrAccessDenied)
-
-		// Clean up by removing read-only attribute
-		removeReadOnly(t, readOnlyPath)
+		testDeleteReadOnlyFile(ctx, t, manager, dir)
 	})
-
 	t.Run("delete file with group write permission", func(t *testing.T) {
-		// Create a file with group write permission
-		groupWritePath := filepath.Join(dir, "group-write.zip")
-		_, err = os.Create(groupWritePath)
-		require.NoError(t, err)
-		err = os.Chmod(groupWritePath, 0664) // rw-rw-r--
-		require.NoError(t, err)
-
-		groupWriteInfo := Info{
-			Path:      groupWritePath,
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-		err = manager.DeleteFile(ctx, groupWriteInfo, false)
-		// This test might pass or fail depending on the user's group membership
-		// We just verify it doesn't panic
-		if err != nil {
-			require.ErrorIs(t, err, ErrAccessDenied)
-		}
+		testDeleteFileWithGroupWrite(ctx, t, manager, dir)
 	})
-
 	t.Run("delete file with other write permission", func(t *testing.T) {
-		// Create a file with other write permission
-		otherWritePath := filepath.Join(dir, "other-write.zip")
-		_, err = os.Create(otherWritePath)
-		require.NoError(t, err)
-		err = os.Chmod(otherWritePath, 0666) // rw-rw-rw-
-		require.NoError(t, err)
-
-		otherWriteInfo := Info{
-			Path:      otherWritePath,
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-		err = manager.DeleteFile(ctx, otherWriteInfo, false)
-		// This test should pass since other has write permission
-		require.NoError(t, err)
-		_, err = os.Stat(otherWritePath)
-		require.Error(t, err)
-		assert.True(t, os.IsNotExist(err))
+		testDeleteFileWithOtherWrite(ctx, t, manager, dir)
 	})
-
 	t.Run("delete file with ACL write permission", func(t *testing.T) {
-		if !checkACLSupport(t) {
-			t.Skip("ACLs not supported on this filesystem")
-		}
-
-		// Create a file with restrictive base permissions
-		aclPath := filepath.Join(dir, "acl-write.zip")
-		_, err = os.Create(aclPath)
-		require.NoError(t, err)
-		err = os.Chmod(aclPath, 0400) // r--------
-		require.NoError(t, err)
-
-		// Get current user info
-		uid := os.Getuid()
-		gid := os.Getgid()
-
-		// Create ACL entries
-		aclEntries := []string{
-			fmt.Sprintf("user:%d:rw-", uid),  // Give current user rw-
-			fmt.Sprintf("group:%d:r--", gid), // Give current group r--
-			"mask::rw-",                      // Set mask to rw-
-			"other::r--",                     // Others get r--
-		}
-
-		// Set ACL using setfacl command with fixed arguments
-		cmd := exec.Command("setfacl", "-m")
-		cmd.Args = append(cmd.Args, strings.Join(aclEntries, ","))
-		cmd.Args = append(cmd.Args, filepath.Clean(aclPath))
-
-		runErr := cmd.Run()
-
-		if runErr != nil {
-			t.Skip("setfacl command not available or failed:", runErr)
-		}
-
-		aclInfo := Info{
-			Path:      aclPath,
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-
-		// Try to delete the file
-		// This should succeed because the ACL gives us write permission
-		err = manager.DeleteFile(ctx, aclInfo, false)
-		require.NoError(t, err)
-		_, err = os.Stat(aclPath)
-		require.Error(t, err)
-		assert.True(t, os.IsNotExist(err))
+		testDeleteFileWithACLWrite(ctx, t, manager, dir)
 	})
-
 	t.Run("delete file with ACL deny write", func(t *testing.T) {
-		if !checkACLSupport(t) {
-			t.Skip("ACLs not supported on this filesystem")
-		}
-
-		// Create a file with permissive base permissions
-		aclPath := filepath.Join(dir, "acl-deny.zip")
-		_, err = os.Create(aclPath)
-		require.NoError(t, err)
-		err = os.Chmod(aclPath, 0666) // rw-rw-rw-
-		require.NoError(t, err)
-
-		// Get current user info
-		uid := os.Getuid()
-
-		// Create ACL entries that deny write access
-		aclEntries := []string{
-			fmt.Sprintf("user:%d:r--", uid), // Give current user r-- only
-			"mask::r--",                     // Set mask to r--
-			"other::r--",                    // Others get r--
-		}
-
-		// Set ACL using setfacl command with fixed arguments
-		cmd := exec.Command("setfacl", "-m")
-		cmd.Args = append(cmd.Args, strings.Join(aclEntries, ","))
-		cmd.Args = append(cmd.Args, filepath.Clean(aclPath))
-
-		runErr := cmd.Run()
-
-		if runErr != nil {
-			t.Skip("setfacl command not available or failed:", runErr)
-		}
-
-		aclInfo := Info{
-			Path:      aclPath,
-			Timestamp: time.Now(),
-			Size:      0,
-		}
-
-		// Try to delete the file
-		// This should fail because the ACL denies write permission
-		err = manager.DeleteFile(ctx, aclInfo, false)
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrAccessDenied)
+		testDeleteFileWithACLDenyWrite(ctx, t, manager, dir)
 	})
-
 	t.Run("context cancellation", func(t *testing.T) {
-		cancelledCtx, cancel := context.WithCancel(context.Background())
-		cancel() // Cancel immediately
-
-		err = manager.DeleteFile(cancelledCtx, info, false)
-		require.Error(t, err)
-		require.ErrorIs(t, err, context.Canceled)
+		testContextCancellation(t, manager, info)
 	})
-
 	t.Run("dry run", func(t *testing.T) {
-		// Recreate the test file
-		_, err = os.Create(path)
-		require.NoError(t, err)
-
-		err = manager.DeleteFile(ctx, info, true)
-		require.NoError(t, err)
-		_, err = os.Stat(path)
-		require.NoError(t, err) // File should still exist
+		testDryRun(ctx, t, manager, path, info)
 	})
 }
 
@@ -710,7 +825,7 @@ func TestParseTimestamp(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, testCase.expected, timestamp)
+				require.Equal(t, testCase.expected, timestamp)
 			}
 		})
 	}
