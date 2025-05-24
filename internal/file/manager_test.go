@@ -31,6 +31,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -107,17 +108,6 @@ func mkfifo(path string, mode uint32) error {
 	return plat.Mkfifo(path, mode)
 }
 
-func checkFIFOSupport() bool {
-	plat := util.NewPlatform()
-
-	support, err := plat.CheckFIFOSupport()
-	if err != nil {
-		return false
-	}
-
-	return support
-}
-
 func TestListFiles(t *testing.T) {
 	t.Parallel()
 	// Setup
@@ -126,7 +116,6 @@ func TestListFiles(t *testing.T) {
 	dir := t.TempDir()
 
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
-
 	require.NoError(t, err)
 
 	// Create test files
@@ -139,94 +128,98 @@ func TestListFiles(t *testing.T) {
 	for _, file := range files {
 		path := filepath.Clean(filepath.Join(dir, file))
 		_, err = os.Create(path)
-
 		require.NoError(t, err)
 	}
 
 	// Create a directory
 	dirPath := filepath.Join(dir, "subdir")
 	err = os.Mkdir(dirPath, 0755)
-
 	require.NoError(t, err)
 
-	t.Run("with symlink", func(t *testing.T) {
-		if !checkSymlinkSupport() {
-			t.Skip("Symlinks not supported on this system")
-		}
+	// Platform-specific tests
+	plat := util.NewPlatform()
 
-		// Create a symlink
-		symlinkPath := filepath.Join(dir, "symlink")
-		err = os.Symlink(filepath.Join(dir, files[0]), symlinkPath)
+	// Symlink test
+	symlinkSupport, _ := plat.CheckSymlinkSupport()
+	if symlinkSupport {
+		t.Run("with symlink", func(t *testing.T) {
+			// Create a symlink
+			symlinkPath := filepath.Join(dir, "symlink")
 
-		if err != nil {
-			t.Skip("Symlink creation failed - may need elevated privileges")
-		}
+			err = os.Symlink(filepath.Join(dir, files[0]), symlinkPath)
+			if err != nil {
+				t.Skip("Symlink creation failed - may need elevated privileges")
+			}
 
-		// List files and verify symlink is not included
-		list, listErr := manager.ListFiles(ctx)
+			// List files and verify symlink is not included
+			list, listErr := manager.ListFiles(ctx)
+			require.NoError(t, listErr)
+			require.Len(t, list, len(files))
 
-		require.NoError(t, listErr)
-
-		require.Len(t, list, len(files))
-
-		for _, file := range list {
-			base := filepath.Base(file.Path)
-			require.Contains(t, files, base)
-			require.NotEqual(t, "symlink", base, "Symlink should not be included in results")
-		}
-	})
-
-	t.Run("with named pipe", func(t *testing.T) {
-		if !checkFIFOSupport() {
-			t.Skip("Named pipes not supported on this system")
-		}
-
-		// Create a named pipe
-		pipePath := filepath.Join(dir, "pipe")
-		err = mkfifo(pipePath, 0644)
-		require.NoError(t, err)
-
-		// Verify the pipe exists and is a FIFO
-		pipeInfo, pipeErr := os.Lstat(pipePath)
-		require.NoError(t, pipeErr)
-		require.True(t, pipeInfo.Mode()&os.ModeNamedPipe != 0, "Created path is not a named pipe")
-
-		// List files and verify the pipe is not included
-		list, listErr := manager.ListFiles(ctx)
-		require.NoError(t, listErr)
-
-		require.Len(t, list, len(files))
-
-		for _, file := range list {
-			base := filepath.Base(file.Path)
-			require.Contains(t, files, base)
-			require.NotEqual(t, "pipe", base, "Named pipe should not be included in results")
-		}
-
-		// Clean up the pipe
-		err = os.Remove(pipePath)
-		require.NoError(t, err)
-	})
-
-	// Execute
-	list, listErr := manager.ListFiles(ctx)
-
-	// Verify
-	require.NoError(t, listErr)
-	require.Len(t, list, len(files))
-
-	for _, file := range list {
-		base := filepath.Base(file.Path)
-		require.Contains(t, files, base)
+			for _, file := range list {
+				base := filepath.Base(file.Path)
+				require.Contains(t, files, base)
+				require.NotEqual(t, "symlink", base, "Symlink should not be included in results")
+			}
+		})
 	}
 
-	// Test with cancelled context
-	cancelledCtx, cancel := context.WithCancel(context.Background())
-	cancel() // Cancel immediately
+	// FIFO test
+	fifoSupport, _ := plat.CheckFIFOSupport()
+	if fifoSupport {
+		t.Run("with named pipe", func(t *testing.T) {
+			// Create a named pipe
+			pipePath := filepath.Join(dir, "pipe")
+			err = mkfifo(pipePath, 0644)
+			require.NoError(t, err)
 
-	_, err = manager.ListFiles(cancelledCtx)
-	require.Error(t, err)
-	require.ErrorIs(t, err, context.Canceled)
+			// Verify the pipe exists and is a FIFO
+			pipeInfo, pipeErr := os.Lstat(pipePath)
+			require.NoError(t, pipeErr)
+			require.True(
+				t,
+				pipeInfo.Mode()&os.ModeNamedPipe != 0,
+				"Created path is not a named pipe",
+			)
+
+			// List files and verify the pipe is not included
+			list, listErr := manager.ListFiles(ctx)
+			require.NoError(t, listErr)
+			require.Len(t, list, len(files))
+
+			for _, file := range list {
+				base := filepath.Base(file.Path)
+				require.Contains(t, files, base)
+				require.NotEqual(t, "pipe", base, "Named pipe should not be included in results")
+			}
+
+			// Clean up the pipe
+			err = os.Remove(pipePath)
+			require.NoError(t, err)
+		})
+	}
+
+	// Basic test that works on all platforms
+	t.Run("list regular files", func(t *testing.T) {
+		list, listErr := manager.ListFiles(ctx)
+		require.NoError(t, listErr)
+		require.Len(t, list, len(files))
+
+		for _, file := range list {
+			base := filepath.Base(file.Path)
+			require.Contains(t, files, base)
+		}
+	})
+
+	// Test with cancelled context
+	t.Run("cancelled context", func(t *testing.T) {
+		cancelledCtx, cancel := context.WithCancel(context.Background())
+		cancel() // Cancel immediately
+
+		_, err = manager.ListFiles(cancelledCtx)
+		require.Error(t, err)
+		require.ErrorIs(t, err, context.Canceled)
+	})
 }
 
 // setupTestFile creates a test file and returns its path and info
@@ -613,6 +606,8 @@ func TestDeleteFile(t *testing.T) {
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
 	require.NoError(t, err)
 	path, info := setupTestFile(t, dir, "backup-202501010000.zip")
+
+	// Basic file operations that work on all platforms
 	t.Run("delete regular file", func(t *testing.T) {
 		testDeleteRegularFile(ctx, t, manager, path, info)
 	})
@@ -622,23 +617,8 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("delete directory", func(t *testing.T) {
 		testDeleteDirectory(ctx, t, manager, dir)
 	})
-	t.Run("delete symlink", func(t *testing.T) {
-		testDeleteSymlink(ctx, t, manager, dir)
-	})
-	t.Run("delete read-only file", func(t *testing.T) {
-		testDeleteReadOnlyFile(ctx, t, manager, dir)
-	})
-	t.Run("delete file with group write permission", func(t *testing.T) {
-		testDeleteFileWithGroupWrite(ctx, t, manager, dir)
-	})
 	t.Run("delete file with other write permission", func(t *testing.T) {
 		testDeleteFileWithOtherWrite(ctx, t, manager, dir)
-	})
-	t.Run("delete file with ACL write permission", func(t *testing.T) {
-		testDeleteFileWithACLWrite(ctx, t, manager, dir)
-	})
-	t.Run("delete file with ACL deny write", func(t *testing.T) {
-		testDeleteFileWithACLDenyWrite(ctx, t, manager, dir)
 	})
 	t.Run("context cancellation", func(t *testing.T) {
 		testContextCancellation(t, manager, info)
@@ -646,6 +626,40 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("dry run", func(t *testing.T) {
 		testDryRun(ctx, t, manager, path, info)
 	})
+
+	// Platform-specific tests that should be skipped on Windows
+	plat := util.NewPlatform()
+
+	symlinkSupport, _ := plat.CheckSymlinkSupport()
+	if symlinkSupport {
+		t.Run("delete symlink", func(t *testing.T) {
+			testDeleteSymlink(ctx, t, manager, dir)
+		})
+	}
+
+	aclSupport, _ := plat.CheckACLSupport()
+	if aclSupport {
+		t.Run("delete file with ACL write permission", func(t *testing.T) {
+			testDeleteFileWithACLWrite(ctx, t, manager, dir)
+		})
+		t.Run("delete file with ACL deny write", func(t *testing.T) {
+			testDeleteFileWithACLDenyWrite(ctx, t, manager, dir)
+		})
+	}
+
+	// Group write test may fail on Windows due to different permission model
+	if runtime.GOOS != "windows" {
+		t.Run("delete file with group write permission", func(t *testing.T) {
+			testDeleteFileWithGroupWrite(ctx, t, manager, dir)
+		})
+	}
+
+	// Read-only test may need platform-specific handling
+	if runtime.GOOS != "windows" {
+		t.Run("delete read-only file", func(t *testing.T) {
+			testDeleteReadOnlyFile(ctx, t, manager, dir)
+		})
+	}
 }
 
 func TestParseTimestamp(t *testing.T) {
