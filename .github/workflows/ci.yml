@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests (${{ runner.os }})
         run: |
-          if [ "${{ runner.os }}" = "windows" ]; then
+          if [ "${{ runner.os }}" = "Windows" ]; then
             bazel test //...
           else
             bazel coverage --combined_report=lcov //...
