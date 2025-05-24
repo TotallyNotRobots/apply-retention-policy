@@ -31,16 +31,6 @@ jobs:
           go-version: ${{ matrix.go-version }}
           check-latest: true
 
-      - name: Set up Bazel
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Restore Bazel cache (if available)
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/bazel
-          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
-          restore-keys: bazel-cache-${{ runner.os }}-
-
       - name: Run tests
         run: |
           bazel coverage --combined_report=lcov //...
@@ -52,6 +42,9 @@ jobs:
         with:
           version: latest
           args: --config=.golangci.yml
+
+      - name: Run buildifier
+        run: bazel run //:buildifier.check
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
