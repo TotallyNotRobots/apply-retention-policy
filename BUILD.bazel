@@ -31,6 +31,13 @@ gazelle(name = "gazelle")
 
 # gazelle:lang go,gofmt
 
+# Version-independent golangci-lint target
+alias(
+    name = "golangci-lint",
+    actual = "@golangci_lint//:golangci-lint",
+    visibility = ["//visibility:public"],
+)
+
 go_library(
     name = "apply-retention-policy_lib",
     srcs = ["main.go"],

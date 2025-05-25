@@ -3,22 +3,26 @@
   "extends": [
     "config:best-practices"
   ],
-  "packageRules": [
-    {
-      "matchManagers": [
-        "bazel"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "bazel dependencies (non-major)"
-    }
-  ],
   "bazel": {
     "enabled": true,
     "managerFilePatterns": [
-      "/MODULE.bazel/"
+      "/^MODULE\\.bazel$/"
     ]
-  }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^MODULE\\.bazel$"],
+      "matchStrings": [
+        "GOLANGCI_LINT_VERSION = \"(?<currentValue>[^\"]+)\"",
+        "GOLANGCI_LINT_SHA256 = \"(?<currentDigest>[^\"]+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "golangci/golangci-lint",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v(?<version>.*)$",
+      "autoReplaceStringTemplate": "GOLANGCI_LINT_VERSION = \"{{newValue}}\"\nGOLANGCI_LINT_SHA256 = \"{{newDigest}}\"",
+      "digestTemplate": "{{newDigest}}"
+    }
+  ]
 }

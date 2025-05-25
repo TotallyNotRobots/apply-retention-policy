@@ -21,6 +21,26 @@ bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 
 bazel_dep(name = "buildifier_prebuilt", version = "8.0.3", dev_dependency = True)
+GOLANGCI_LINT_VERSION = "2.1.6"
+GOLANGCI_LINT_SHA256 = "e55e0eb515936c0fbd178bce504798a9bd2f0b191e5e357768b18fd5415ee541"
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "golangci_lint",
+    build_file_content = """
+# Export the versioned binary
+exports_files(["golangci-lint-{version}-linux-amd64/golangci-lint"])
+
+# Create a version-independent binary target
+alias(
+    name = "golangci-lint",
+    actual = "golangci-lint-{version}-linux-amd64/golangci-lint",
+    visibility = ["//visibility:public"],
+)
+""".format(version = GOLANGCI_LINT_VERSION),
+    sha256 = GOLANGCI_LINT_SHA256,
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v{version}/golangci-lint-{version}-linux-amd64.tar.gz".format(version = GOLANGCI_LINT_VERSION)],
+)
 
 # Register Go toolchain
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
