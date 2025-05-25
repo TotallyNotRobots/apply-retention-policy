@@ -915,12 +915,12 @@
     "@@rules_oci+//oci:extensions.bzl%oci": {
       "general": {
         "bzlTransitiveDigest": "vanqorv5uSAUzWdiofsrm3KqS6w5aFojwH+nl9U1nUw=",
-        "usagesDigest": "7LTk7gDlEjiUIOuD85X5sScdWcYirdmoxOxmFiHuX5Q=",
+        "usagesDigest": "UNK8WaHdBzDYtE+2BVROGqWW8gO80J+ECIc1W4ir1cI=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
         "generatedRepoSpecs": {
-          "distroless_base_amd64_single": {
+          "distroless_base_linux_amd64": {
             "repoRuleId": "@@rules_oci+//oci/private:pull.bzl%oci_pull",
             "attributes": {
               "www_authenticate_challenges": {},
@@ -928,49 +928,38 @@
               "registry": "gcr.io",
               "repository": "distroless/static-debian12",
               "identifier": "sha256:e14f4c00d388743628c674d88e44ac51895d7bc074a37e805eaf141cdbfa5ff1",
-              "target_name": "distroless_base_amd64_single",
+              "platform": "linux/amd64",
+              "target_name": "distroless_base_linux_amd64",
               "bazel_tags": []
             }
           },
-          "distroless_base_amd64": {
-            "repoRuleId": "@@rules_oci+//oci/private:pull.bzl%oci_alias",
-            "attributes": {
-              "target_name": "distroless_base_amd64",
-              "www_authenticate_challenges": {},
-              "scheme": "https",
-              "registry": "gcr.io",
-              "repository": "distroless/static-debian12",
-              "identifier": "sha256:e14f4c00d388743628c674d88e44ac51895d7bc074a37e805eaf141cdbfa5ff1",
-              "platforms": {},
-              "platform": "@@rules_oci+//oci:distroless_base_amd64_single",
-              "bzlmod_repository": "distroless_base_amd64",
-              "reproducible": true
-            }
-          },
-          "distroless_base_arm64_single": {
+          "distroless_base_linux_arm64": {
             "repoRuleId": "@@rules_oci+//oci/private:pull.bzl%oci_pull",
             "attributes": {
               "www_authenticate_challenges": {},
               "scheme": "https",
               "registry": "gcr.io",
               "repository": "distroless/static-debian12",
-              "identifier": "sha256:338640f5abf534cbee57abc6a7bf8d4782e1601b32ada5724e5329c2ac65706e",
-              "target_name": "distroless_base_arm64_single",
+              "identifier": "sha256:e14f4c00d388743628c674d88e44ac51895d7bc074a37e805eaf141cdbfa5ff1",
+              "platform": "linux/arm64",
+              "target_name": "distroless_base_linux_arm64",
               "bazel_tags": []
             }
           },
-          "distroless_base_arm64": {
+          "distroless_base": {
             "repoRuleId": "@@rules_oci+//oci/private:pull.bzl%oci_alias",
             "attributes": {
-              "target_name": "distroless_base_arm64",
+              "target_name": "distroless_base",
               "www_authenticate_challenges": {},
               "scheme": "https",
               "registry": "gcr.io",
               "repository": "distroless/static-debian12",
-              "identifier": "sha256:338640f5abf534cbee57abc6a7bf8d4782e1601b32ada5724e5329c2ac65706e",
-              "platforms": {},
-              "platform": "@@rules_oci+//oci:distroless_base_arm64_single",
-              "bzlmod_repository": "distroless_base_arm64",
+              "identifier": "sha256:e14f4c00d388743628c674d88e44ac51895d7bc074a37e805eaf141cdbfa5ff1",
+              "platforms": {
+                "@@platforms//cpu:x86_64": "@distroless_base_linux_amd64",
+                "@@platforms//cpu:arm64": "@distroless_base_linux_arm64"
+              },
+              "bzlmod_repository": "distroless_base",
               "reproducible": true
             }
           },
@@ -1090,8 +1079,9 @@
         },
         "moduleExtensionMetadata": {
           "explicitRootModuleDirectDeps": [
-            "distroless_base_amd64",
-            "distroless_base_arm64"
+            "distroless_base",
+            "distroless_base_linux_amd64",
+            "distroless_base_linux_arm64"
           ],
           "explicitRootModuleDirectDevDeps": [],
           "useAllRepos": "NO",
