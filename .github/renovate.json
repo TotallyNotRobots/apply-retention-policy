@@ -18,11 +18,7 @@
         "GOLANGCI_LINT_SHA256 = \"(?<currentDigest>[^\"]+)\""
       ],
       "datasourceTemplate": "github-releases",
-      "packageNameTemplate": "golangci/golangci-lint",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v(?<version>.*)$",
-      "autoReplaceStringTemplate": "GOLANGCI_LINT_VERSION = \"{{newValue}}\"\nGOLANGCI_LINT_SHA256 = \"{{newDigest}}\"",
-      "digestTemplate": "{{newDigest}}"
+      "packageNameTemplate": "golangci/golangci-lint"
     }
   ]
 }
