@@ -640,31 +640,54 @@ func testDryRun(ctx context.Context, t *testing.T, manager *Manager, path string
 func TestDeleteFile(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
-	log := &logger.Logger{Logger: zap.NewNop()}
-	dir := t.TempDir()
-	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
-	require.NoError(t, err)
-
 	// Basic file operations that work on all platforms
 	t.Run("delete regular file", func(t *testing.T) {
+		ctx := context.Background()
+		dir := t.TempDir()
+		log := &logger.Logger{Logger: zap.NewNop()}
+		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+		require.NoError(t, err)
 		path, info := setupTestFile(t, dir, "backup-202501010000.zip")
 		testDeleteRegularFile(ctx, t, manager, path, info)
 	})
 	t.Run("delete non-existent file", func(t *testing.T) {
+		ctx := context.Background()
+		dir := t.TempDir()
+		log := &logger.Logger{Logger: zap.NewNop()}
+		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+		require.NoError(t, err)
 		testDeleteNonExistentFile(ctx, t, manager, dir)
 	})
 	t.Run("delete directory", func(t *testing.T) {
+		ctx := context.Background()
+		dir := t.TempDir()
+		log := &logger.Logger{Logger: zap.NewNop()}
+		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+		require.NoError(t, err)
 		testDeleteDirectory(ctx, t, manager, dir)
 	})
 	t.Run("delete file with other write permission", func(t *testing.T) {
+		ctx := context.Background()
+		dir := t.TempDir()
+		log := &logger.Logger{Logger: zap.NewNop()}
+		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+		require.NoError(t, err)
 		testDeleteFileWithOtherWrite(ctx, t, manager, dir)
 	})
 	t.Run("context cancellation", func(t *testing.T) {
+		dir := t.TempDir()
+		log := &logger.Logger{Logger: zap.NewNop()}
+		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+		require.NoError(t, err)
 		_, info := setupTestFile(t, dir, "backup-202501010000.zip")
 		testContextCancellation(t, manager, info)
 	})
 	t.Run("dry run", func(t *testing.T) {
+		ctx := context.Background()
+		dir := t.TempDir()
+		log := &logger.Logger{Logger: zap.NewNop()}
+		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+		require.NoError(t, err)
 		path, info := setupTestFile(t, dir, "backup-202501010000.zip")
 		testDryRun(ctx, t, manager, path, info)
 	})
@@ -675,6 +698,11 @@ func TestDeleteFile(t *testing.T) {
 	symlinkSupport, _ := plat.CheckSymlinkSupport()
 	if symlinkSupport {
 		t.Run("delete symlink", func(t *testing.T) {
+			ctx := context.Background()
+			dir := t.TempDir()
+			log := &logger.Logger{Logger: zap.NewNop()}
+			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+			require.NoError(t, err)
 			testDeleteSymlink(ctx, t, manager, dir)
 		})
 	}
@@ -682,9 +710,19 @@ func TestDeleteFile(t *testing.T) {
 	aclSupport, _ := plat.CheckACLSupport()
 	if aclSupport {
 		t.Run("delete file with ACL write permission", func(t *testing.T) {
+			ctx := context.Background()
+			dir := t.TempDir()
+			log := &logger.Logger{Logger: zap.NewNop()}
+			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+			require.NoError(t, err)
 			testDeleteFileWithACLWrite(ctx, t, manager, dir)
 		})
 		t.Run("delete file with ACL deny write", func(t *testing.T) {
+			ctx := context.Background()
+			dir := t.TempDir()
+			log := &logger.Logger{Logger: zap.NewNop()}
+			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+			require.NoError(t, err)
 			testDeleteFileWithACLDenyWrite(ctx, t, manager, dir)
 		})
 	}
@@ -692,6 +730,11 @@ func TestDeleteFile(t *testing.T) {
 	// Group write test may fail on Windows due to different permission model
 	if runtime.GOOS != "windows" {
 		t.Run("delete file with group write permission", func(t *testing.T) {
+			ctx := context.Background()
+			dir := t.TempDir()
+			log := &logger.Logger{Logger: zap.NewNop()}
+			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+			require.NoError(t, err)
 			testDeleteFileWithGroupWrite(ctx, t, manager, dir)
 		})
 	}
@@ -699,6 +742,11 @@ func TestDeleteFile(t *testing.T) {
 	// Read-only test may need platform-specific handling
 	if runtime.GOOS != "windows" {
 		t.Run("delete read-only file", func(t *testing.T) {
+			ctx := context.Background()
+			dir := t.TempDir()
+			log := &logger.Logger{Logger: zap.NewNop()}
+			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
+			require.NoError(t, err)
 			testDeleteReadOnlyFile(ctx, t, manager, dir)
 		})
 	}
