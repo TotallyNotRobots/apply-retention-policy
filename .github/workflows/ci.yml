@@ -43,16 +43,14 @@ jobs:
         shell: bash
 
       - name: Run linter
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: latest
-          args: --config=.golangci.yml
+        run: bazel run //:golangci-lint -- run
 
       - name: Run buildifier
         run: bazel run //:buildifier.check
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
+        if: runner.os != 'Windows'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.txt
