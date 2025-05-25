@@ -24,7 +24,7 @@
 *.pdf binary
 
 # Go specific files
-*.go text diff=golang
+*.go text diff=golang eol=lf
 go.mod text
 go.sum text
 *.tmpl text
