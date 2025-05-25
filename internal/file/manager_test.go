@@ -629,9 +629,7 @@ func testContextCancellation(t *testing.T, manager *Manager, info Info) {
 }
 
 func testDryRun(ctx context.Context, t *testing.T, manager *Manager, path string, info Info) {
-	_, err := os.Create(path)
-	require.NoError(t, err)
-	err = manager.DeleteFile(ctx, info, true)
+	err := manager.DeleteFile(ctx, info, true)
 	require.NoError(t, err)
 	_, err = os.Stat(path)
 	require.NoError(t, err)
