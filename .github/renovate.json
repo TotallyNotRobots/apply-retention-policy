@@ -12,7 +12,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^MODULE\\.bazel$"],
+      "managerFilePatterns": [
+        "/^MODULE\\.bazel$/"
+      ],
       "matchStrings": [
         "GOLANGCI_LINT_VERSION = \"(?<currentValue>[^\"]+)\"",
         "GOLANGCI_LINT_SHA256 = \"(?<currentDigest>[^\"]+)\""
