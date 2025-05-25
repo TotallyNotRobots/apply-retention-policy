@@ -38,11 +38,13 @@ jobs:
       - name: Extract version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Build and push multi-arch image
         run: |
           bazel run //:push -- --tag=${{ steps.get_version.outputs.VERSION }}
           bazel run //:push -- --tag=latest
+        shell: bash
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
