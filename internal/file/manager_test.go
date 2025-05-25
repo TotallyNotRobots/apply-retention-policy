@@ -645,10 +645,10 @@ func TestDeleteFile(t *testing.T) {
 	dir := t.TempDir()
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
 	require.NoError(t, err)
-	path, info := setupTestFile(t, dir, "backup-202501010000.zip")
 
 	// Basic file operations that work on all platforms
 	t.Run("delete regular file", func(t *testing.T) {
+		path, info := setupTestFile(t, dir, "backup-202501010000.zip")
 		testDeleteRegularFile(ctx, t, manager, path, info)
 	})
 	t.Run("delete non-existent file", func(t *testing.T) {
@@ -661,9 +661,11 @@ func TestDeleteFile(t *testing.T) {
 		testDeleteFileWithOtherWrite(ctx, t, manager, dir)
 	})
 	t.Run("context cancellation", func(t *testing.T) {
+		_, info := setupTestFile(t, dir, "backup-202501010000.zip")
 		testContextCancellation(t, manager, info)
 	})
 	t.Run("dry run", func(t *testing.T) {
+		path, info := setupTestFile(t, dir, "backup-202501010000.zip")
 		testDryRun(ctx, t, manager, path, info)
 	})
 
@@ -833,6 +835,3 @@ func TestParseTimestamp(t *testing.T) {
 		})
 	}
 }
-
-// Platform-specific implementations
-// These are defined in separate files with build tags
