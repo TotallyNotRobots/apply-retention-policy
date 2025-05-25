@@ -8,12 +8,11 @@ on:
 
 jobs:
   test:
-    name: Test (${{ matrix.os }}, ${{ matrix.go-version }})
+    name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        go-version: [1.23.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -25,12 +24,6 @@ jobs:
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
             bazel-cache-${{ runner.os }}-
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
-          check-latest: true
 
       - name: Run tests (${{ runner.os }})
         run: |

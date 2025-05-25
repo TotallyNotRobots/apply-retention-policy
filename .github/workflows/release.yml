@@ -22,22 +22,6 @@ jobs:
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: bazel-cache-${{ runner.os }}-
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23.x'
-          check-latest: true
-
-      - name: Set up Bazel
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Restore Bazel cache (if available)
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/bazel
-          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
-          restore-keys: bazel-cache-${{ runner.os }}-
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
