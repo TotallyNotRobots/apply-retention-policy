@@ -71,12 +71,14 @@ func (p *WindowsPlatform) CheckFIFOSupport() (bool, error) {
 
 // SetReadOnly implements Platform.SetReadOnly for Windows
 func (p *WindowsPlatform) SetReadOnly(path string) error {
+	// #nosec G204 - path is cleaned with filepath.Clean before use
 	cmd := exec.Command("attrib", "+R", filepath.Clean(path))
 	return cmd.Run()
 }
 
 // RemoveReadOnly implements Platform.RemoveReadOnly for Windows
 func (p *WindowsPlatform) RemoveReadOnly(path string) error {
+	// #nosec G204 - path is cleaned with filepath.Clean before use
 	cmd := exec.Command("attrib", "-R", filepath.Clean(path))
 	return cmd.Run()
 }
