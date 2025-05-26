@@ -26,14 +26,6 @@ jobs:
           restore-keys: |
             bazel-cache-${{ runner.os }}-
 
-      - name: Setup Go toolchain
-        run: |
-          # Use Bazel to download and setup the Go toolchain
-          bazel build @rules_go//go
-          # Add the Go toolchain to PATH
-          echo "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin" >> $GITHUB_PATH
-        shell: bash
-
       - name: Run tests (${{ runner.os }})
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
@@ -68,6 +60,7 @@ jobs:
         run: |
           # Use Bazel to download and setup the Go toolchain
           bazel run @rules_go//go -- version
+          bazel build //...
           # Add the Go toolchain to PATH
           echo "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin" >> $GITHUB_PATH
           ls "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin"
