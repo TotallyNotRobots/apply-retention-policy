@@ -29,9 +29,9 @@ jobs:
       - name: Setup Go toolchain
         run: |
           # Use Bazel to download and setup the Go toolchain
-          bazel build @go_sdk//:packages
+          bazel build @rules_go//go
           # Add the Go toolchain to PATH
-          echo "$(bazel info output_base)/external/go_sdk/bin" >> $GITHUB_PATH
+          echo "$(bazel info output_base)/external/rules_go++go_sdk+main___download_0/bin/go" >> $GITHUB_PATH
         shell: bash
 
       - name: Run tests (${{ runner.os }})
