@@ -67,13 +67,7 @@ jobs:
         shell: bash
 
       - name: Run buildifier
+        if: runner.os != 'Windows'
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            # On Windows, use a shorter output directory to avoid path length issues
-            export TEST_TMPDIR=/c/bazel/tmp
-            export BAZEL_OUTPUT_BASE=/c/bazel/out
-            bazel --output_base=/c/bazel/out run //:buildifier.check
-          else
-            bazel run //:buildifier.check
-          fi
+          bazel run //:buildifier.check
         shell: bash
