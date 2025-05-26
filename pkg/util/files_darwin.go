@@ -83,6 +83,7 @@ func (p *DarwinPlatform) CheckACLSupport() (bool, error) {
 	return false, nil
 }
 
+// CheckSymlinkSupport implements Platform.CheckSymlinkSupport for OSX systems
 func (p *DarwinPlatform) CheckSymlinkSupport() (bool, error) {
 	return true, nil
 }
@@ -94,10 +95,10 @@ func (p *DarwinPlatform) CheckFIFOSupport() (bool, error) {
 
 // SetReadOnly implements Platform.SetReadOnly for OSX systems
 func (p *DarwinPlatform) SetReadOnly(path string) error {
-	return os.Chmod(filepath.Clean(path), 0o444)
+	return os.Chmod(filepath.Clean(path), 0o400)
 }
 
 // RemoveReadOnly implements Platform.RemoveReadOnly for OSX systems
 func (p *DarwinPlatform) RemoveReadOnly(path string) error {
-	return os.Chmod(filepath.Clean(path), 0o644)
+	return os.Chmod(filepath.Clean(path), 0o600)
 }
