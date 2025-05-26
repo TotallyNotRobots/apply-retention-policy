@@ -28,28 +28,37 @@ run:
 
 linters:
   enable:
-    - revive
+    - bodyclose
+    - dupl
+    - errcheck
+    - exhaustive
+    - exhaustruct
+    - forbidigo
+    - gochecknoglobals
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
     - gosec
-    - staticcheck
+    - govet
     - ineffassign
+    - lll
+    - misspell
+    - nilerr
+    - noctx
+    - prealloc
+    - revive
+    - staticcheck
     - unconvert
     - unparam
     - unused
     - whitespace
-    - errcheck
-    - gocyclo
-    - govet
-    - lll
-    - dupl
-    - gochecknoglobals
     - wsl
-    - forbidigo
-    - gocognit
-    - gocritic
-    - gocyclo
-    - goconst
-    - gosec
-    - govet
+    # - ireturn
+    # - paralleltest
+    # - testpackage
+    # - thelper
+    # - wrapcheck
   settings:
     revive:
       rules:
@@ -72,13 +81,23 @@ linters:
         - name: argument-limit
         - name: cyclomatic
           arguments:
-            - 15
+            - 10
         - name: max-public-structs
-        # - name: file-header
-        #   arguments:
-        #     - Copyright © 2025 linuxdaemon <linuxdaemon.irc@gmail.com>
+        - name: modifies-parameter
+        - name: modifies-value-receiver
+        - name: confusing-naming
+        - name: cognitive-complexity
+          arguments:
+            - 16
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        # - experimental
+        # - opinionated
+        - performance
+        # - style
     gocyclo:
-      min-complexity: 15
+      min-complexity: 10
     goconst:
       min-len: 2
       min-occurrences: 3
