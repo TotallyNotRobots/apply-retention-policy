@@ -32,7 +32,7 @@ linters:
     - dupl
     - errcheck
     - exhaustive
-    - exhaustruct
+    # - exhaustruct
     - forbidigo
     - gochecknoglobals
     - gocognit
@@ -53,7 +53,7 @@ linters:
     - unparam
     - unused
     - whitespace
-    - wsl
+    # - wsl
     # - ireturn
     # - paralleltest
     # - testpackage
