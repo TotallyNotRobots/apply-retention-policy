@@ -229,7 +229,7 @@ func TestListFiles(t *testing.T) {
 }
 
 // setupTestFile creates a test file and returns its path and info
-func setupTestFile(t *testing.T, dir string, filename string) (string, Info) {
+func setupTestFile(t *testing.T, dir, filename string) (string, Info) {
 	path := filepath.Clean(filepath.Join(dir, filename))
 
 	var f *os.File
