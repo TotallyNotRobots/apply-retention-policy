@@ -2,8 +2,12 @@
 
 load("@bazel_skylib//lib:selects.bzl", "selects")
 
-def golangci_lint_config():
-    """Configure golangci-lint for different platforms."""
+def golangci_lint_config(name = "golangci-lint"):
+    """Configure golangci-lint for different platforms.
+
+    Args:
+      name: The name of the golangci-lint target to create. Defaults to "golangci-lint".
+    """
     selects.config_setting_group(
         name = "linux_amd64",
         match_all = [
@@ -45,7 +49,7 @@ def golangci_lint_config():
     )
 
     native.alias(
-        name = "golangci-lint",
+        name = name,
         actual = select({
             ":linux_amd64": "@golangci_lint_linux_amd64//:golangci-lint-linux-amd64",
             ":linux_arm64": "@golangci_lint_linux_arm64//:golangci-lint-linux-arm64",
