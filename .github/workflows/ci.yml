@@ -72,6 +72,13 @@ jobs:
           echo "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin/go" >> $GITHUB_PATH
         shell: bash
 
+      - name: print go version and path
+        run: |
+          which go
+          go version
+          echo $GITHUB_PATH
+        shell: bash
+
       - name: Run linter
         run: bazel run //:golangci-lint -- run
         shell: bash
