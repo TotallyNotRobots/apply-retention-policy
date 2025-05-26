@@ -1,7 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices"
+    "config:best-practices",
+    "config:pinVersions",
+    "config:security",
+    "config:separateMajorReleases",
+    "config:scheduleEarlyMondays"
   ],
   "bazel": {
     "enabled": true,
