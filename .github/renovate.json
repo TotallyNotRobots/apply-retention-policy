@@ -8,19 +8,5 @@
     "managerFilePatterns": [
       "/^MODULE\\.bazel$/"
     ]
-  },
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/^MODULE\\.bazel$/"
-      ],
-      "matchStrings": [
-        "GOLANGCI_LINT_VERSION = \"(?<currentValue>[^\"]+)\"",
-        "GOLANGCI_LINT_SHA256 = \"(?<currentDigest>[^\"]+)\""
-      ],
-      "datasourceTemplate": "github-releases",
-      "packageNameTemplate": "golangci/golangci-lint"
-    }
-  ]
+  }
 }

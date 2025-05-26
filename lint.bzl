@@ -48,15 +48,24 @@ def golangci_lint_config(name = "golangci-lint"):
         ],
     )
 
+    selects.config_setting_group(
+        name = "windows_arm64",
+        match_all = [
+            "@platforms//os:windows",
+            "@platforms//cpu:aarch64",
+        ],
+    )
+
     native.alias(
         name = name,
         actual = select({
-            ":linux_amd64": "@golangci_lint_linux_amd64//:golangci-lint-linux-amd64",
-            ":linux_arm64": "@golangci_lint_linux_arm64//:golangci-lint-linux-arm64",
-            ":darwin_amd64": "@golangci_lint_darwin_amd64//:golangci-lint-darwin-amd64",
-            ":darwin_arm64": "@golangci_lint_darwin_arm64//:golangci-lint-darwin-arm64",
-            ":windows_amd64": "@golangci_lint_windows_amd64//:golangci-lint-windows-amd64",
-            "//conditions:default": "@golangci_lint_linux_amd64//:golangci-lint-linux-amd64",
+            ":linux_amd64": "@golangci_lint_linux_amd64//:golangci-lint",
+            ":linux_arm64": "@golangci_lint_linux_arm64//:golangci-lint",
+            ":darwin_amd64": "@golangci_lint_darwin_amd64//:golangci-lint",
+            ":darwin_arm64": "@golangci_lint_darwin_arm64//:golangci-lint",
+            ":windows_amd64": "@golangci_lint_windows_amd64//:golangci-lint",
+            ":windows_arm64": "@golangci_lint_windows_arm64//:golangci-lint",
+            "//conditions:default": "@golangci_lint_linux_amd64//:golangci-lint",
         }),
         visibility = ["//visibility:public"],
     )
