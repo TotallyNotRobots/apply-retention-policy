@@ -26,6 +26,14 @@ jobs:
           restore-keys: |
             bazel-cache-${{ runner.os }}-
 
+      - name: Setup Go toolchain
+        run: |
+          # Use Bazel to download and setup the Go toolchain
+          bazel build @go_sdk//:packages
+          # Add the Go toolchain to PATH
+          echo "$(bazel info output_base)/external/go_sdk/bin" >> $GITHUB_PATH
+        shell: bash
+
       - name: Run tests (${{ runner.os }})
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
