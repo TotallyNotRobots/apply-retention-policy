@@ -28,6 +28,7 @@ run:
 
 linters:
   enable:
+    - asasalint
     - asciicheck
     - bidichk
     - bodyclose
@@ -35,49 +36,102 @@ linters:
     - containedctx
     - contextcheck
     - copyloopvar
+    - cyclop
     - decorder
+    # - depguard
     - dogsled
     - dupl
     - dupword
     - durationcheck
+    # - err113
     - errcheck
+    - errchkjson
     - errname
     - errorlint
     - exhaustive
     # - exhaustruct
     - exptostd
+    - fatcontext
     - forbidigo
-    - funcorder
+    - forcetypeassert
+    # - funcorder
+    # - funlen
+    - ginkgolinter
+    - gocheckcompilerdirectives
     - gochecknoglobals
+    # - gochecknoinits
+    - gochecksumtype
     - gocognit
     - goconst
     - gocritic
     - gocyclo
+    # - godot
+    - godox
+    - goheader
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
     - gosec
+    - gosmopolitan
     - govet
+    - grouper
+    - iface
+    - importas
+    - inamedparam
     - ineffassign
+    - interfacebloat
+    - intrange
+    # - ireturn
     - lll
+    - loggercheck
     - maintidx
+    - makezero
+    - mirror
     - misspell
+    # - mnd
+    - musttag
+    - nakedret
     - nestif
+    - nilerr
     - nilnesserr
     - nilnil
-    - nilerr
+    # - nlreturn
     - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    # - paralleltest
+    # - perfsprint
     - prealloc
+    - predeclared
+    - promlinter
+    - protogetter
+    - reassign
+    - recvcheck
     - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
     - staticcheck
-    - testifylint
+    - tagalign
+    # - tagliatelle
+    - testableexamples
+    # - testifylint
+    # - testpackage
+    # - thelper
+    # - tparallel
     - unconvert
     - unparam
     - unused
+    - usestdlibvars
+    - usetesting
+    # - varnamelen
+    - wastedassign
     - whitespace
-    # - wsl
-    # - ireturn
-    # - paralleltest
-    # - testpackage
-    # - thelper
     # - wrapcheck
+    # - wsl
+    - zerologlint
   settings:
     revive:
       rules:
@@ -127,14 +181,17 @@ linters:
       checks:
         - all
   exclusions:
-    presets:
-      - comments
-      - std-error-handling
-      - common-false-positives
-      - legacy
+    # presets:
+      # - comments
+      # - std-error-handling
+      # - common-false-positives
+      # - legacy
     warn-unused: true
-    generated: lax
+    generated: strict
     rules:
+      - path: _test.go
+        linters:
+          - gosec
       - path: cmd/root.go
         linters:
           - gochecknoglobals

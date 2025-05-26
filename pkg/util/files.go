@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package files provides platform-specific file operations.
+// Package util provides various utilities for the application.
 package util
 
 import (

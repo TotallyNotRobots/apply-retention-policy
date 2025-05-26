@@ -59,10 +59,10 @@ def golangci_lint_config(name = "golangci-lint"):
     native.alias(
         name = name,
         actual = select({
-            ":linux_amd64": "@golangci_lint_linux_amd64//:golangci-lint",
-            ":linux_arm64": "@golangci_lint_linux_arm64//:golangci-lint",
             ":darwin_amd64": "@golangci_lint_darwin_amd64//:golangci-lint",
             ":darwin_arm64": "@golangci_lint_darwin_arm64//:golangci-lint",
+            ":linux_amd64": "@golangci_lint_linux_amd64//:golangci-lint",
+            ":linux_arm64": "@golangci_lint_linux_arm64//:golangci-lint",
             ":windows_amd64": "@golangci_lint_windows_amd64//:golangci-lint.exe",
             ":windows_arm64": "@golangci_lint_windows_arm64//:golangci-lint.exe",
             "//conditions:default": "@golangci_lint_linux_amd64//:golangci-lint",

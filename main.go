@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+// Package main is the entry point for the apply-retention-policy application.
+// It provides a command-line interface for managing file retention policies
+// across different filesystems, with support for various filesystem features
+// like ACLs, symlinks, and FIFOs.
 package main
 
 import (

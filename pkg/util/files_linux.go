@@ -35,7 +35,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// UnixPlatform implements Platform for Unix-like systems
+// LinuxPlatform implements Platform for Linux systems
 type LinuxPlatform struct{}
 
 // NewPlatform returns a new Platform implementation for the current system
@@ -43,7 +43,7 @@ func NewPlatform() Platform {
 	return &LinuxPlatform{}
 }
 
-// Statfs implements Platform.Statfs for Unix-like systems
+// Statfs implements Platform.Statfs for Linux systems
 func (p *LinuxPlatform) Statfs(path string, stat *FileSystemStats) error {
 	var unixStat syscall.Statfs_t
 
@@ -57,12 +57,12 @@ func (p *LinuxPlatform) Statfs(path string, stat *FileSystemStats) error {
 	return nil
 }
 
-// Mkfifo implements Platform.Mkfifo for Unix-like systems
+// Mkfifo implements Platform.Mkfifo for Linux systems
 func (p *LinuxPlatform) Mkfifo(path string, mode uint32) error {
 	return syscall.Mkfifo(path, mode)
 }
 
-// GetSupportedFsTypes implements Platform.GetSupportedFsTypes for Unix systems
+// GetSupportedFsTypes implements Platform.GetSupportedFsTypes for Linux systems
 func (p *LinuxPlatform) GetSupportedFsTypes() []int64 {
 	return []int64{
 		int64(unix.XFS_SUPER_MAGIC),
@@ -71,7 +71,7 @@ func (p *LinuxPlatform) GetSupportedFsTypes() []int64 {
 	}
 }
 
-// CheckACLSupport implements Platform.CheckACLSupport for Unix systems
+// CheckACLSupport implements Platform.CheckACLSupport for Linux systems
 func (p *LinuxPlatform) CheckACLSupport() (bool, error) {
 	var stat FileSystemStats
 
@@ -89,21 +89,22 @@ func (p *LinuxPlatform) CheckACLSupport() (bool, error) {
 	return false, nil
 }
 
+// CheckSymlinkSupport implements Platform.CheckSymlinkSupport for Linux systems
 func (p *LinuxPlatform) CheckSymlinkSupport() (bool, error) {
 	return true, nil
 }
 
-// CheckFIFOSupport implements Platform.CheckFIFOSupport for Unix systems
+// CheckFIFOSupport implements Platform.CheckFIFOSupport for Linux systems
 func (p *LinuxPlatform) CheckFIFOSupport() (bool, error) {
 	return true, nil
 }
 
-// SetReadOnly implements Platform.SetReadOnly for Unix systems
+// SetReadOnly implements Platform.SetReadOnly for Linux systems
 func (p *LinuxPlatform) SetReadOnly(path string) error {
-	return os.Chmod(filepath.Clean(path), 0o444)
+	return os.Chmod(filepath.Clean(path), 0o400)
 }
 
-// RemoveReadOnly implements Platform.RemoveReadOnly for Unix systems
+// RemoveReadOnly implements Platform.RemoveReadOnly for Linux systems
 func (p *LinuxPlatform) RemoveReadOnly(path string) error {
-	return os.Chmod(filepath.Clean(path), 0o644)
+	return os.Chmod(filepath.Clean(path), 0o600)
 }
