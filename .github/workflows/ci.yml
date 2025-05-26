@@ -56,21 +56,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Go toolchain
-        run: |
-          # Use Bazel to download and setup the Go toolchain
-          bazel build //...
-          # Add the Go toolchain to PATH
-          echo "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin" >> $GITHUB_PATH
-          ls "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin"
-        shell: bash
-
-      - name: print go version and path
-        run: |
-          which go
-          go version
-          echo $GITHUB_PATH
-        shell: bash
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.9'
+          check-latest: true
 
       - name: Run linter
         run: bazel run //:golangci-lint -- run
