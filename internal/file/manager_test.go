@@ -182,9 +182,9 @@ func TestListFiles(t *testing.T) {
 			// Verify the pipe exists and is a FIFO
 			pipeInfo, pipeErr := os.Lstat(pipePath)
 			require.NoError(t, pipeErr)
-			require.True(
+			require.NotEqual(
 				t,
-				pipeInfo.Mode()&os.ModeNamedPipe != 0,
+				pipeInfo.Mode()&os.ModeNamedPipe, 0,
 				"Created path is not a named pipe",
 			)
 
@@ -363,7 +363,7 @@ func testDeleteSymlink(ctx context.Context, t *testing.T, manager *Manager, dir 
 
 	linkInfo, err := os.Lstat(symlinkPath)
 	require.NoError(t, err)
-	require.True(t, linkInfo.Mode()&os.ModeSymlink != 0, "Created path is not a symlink")
+	require.NotEqual(t, linkInfo.Mode()&os.ModeSymlink, 0, "Created path is not a symlink")
 
 	symlinkInfo := Info{
 		Path:      symlinkPath,

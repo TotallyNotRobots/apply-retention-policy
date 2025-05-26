@@ -28,12 +28,26 @@ run:
 
 linters:
   enable:
+    - asciicheck
+    - bidichk
     - bodyclose
+    - canonicalheader
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - decorder
+    - dogsled
     - dupl
+    - dupword
+    - durationcheck
     - errcheck
+    - errname
+    - errorlint
     - exhaustive
     # - exhaustruct
+    - exptostd
     - forbidigo
+    - funcorder
     - gochecknoglobals
     - gocognit
     - goconst
@@ -43,12 +57,17 @@ linters:
     - govet
     - ineffassign
     - lll
+    - maintidx
     - misspell
+    - nestif
+    - nilnesserr
+    - nilnil
     - nilerr
     - noctx
     - prealloc
     - revive
     - staticcheck
+    - testifylint
     - unconvert
     - unparam
     - unused
@@ -141,6 +160,8 @@ formatters:
     - goimports
     - golines
   settings:
+    gofumpt:
+      extra-rules: true
     goimports:
       local-prefixes:
         - "github.com/TotallyNotRobots/apply-retention-policy"
