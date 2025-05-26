@@ -33,7 +33,7 @@ import (
 	"syscall"
 )
 
-// UnixPlatform implements Platform for Unix-like systems
+// DarwinPlatform implements Platform for OSX systems
 type DarwinPlatform struct{}
 
 // NewPlatform returns a new Platform implementation for the current system
@@ -41,7 +41,7 @@ func NewPlatform() Platform {
 	return &DarwinPlatform{}
 }
 
-// Statfs implements Platform.Statfs for Unix-like systems
+// Statfs implements Platform.Statfs for OSX systems
 func (p *DarwinPlatform) Statfs(path string, stat *FileSystemStats) error {
 	var unixStat syscall.Statfs_t
 
@@ -55,17 +55,17 @@ func (p *DarwinPlatform) Statfs(path string, stat *FileSystemStats) error {
 	return nil
 }
 
-// Mkfifo implements Platform.Mkfifo for Unix-like systems
+// Mkfifo implements Platform.Mkfifo for OSX systems
 func (p *DarwinPlatform) Mkfifo(path string, mode uint32) error {
 	return syscall.Mkfifo(path, mode)
 }
 
-// GetSupportedFsTypes implements Platform.GetSupportedFsTypes for Unix systems
+// GetSupportedFsTypes implements Platform.GetSupportedFsTypes for OSX systems
 func (p *DarwinPlatform) GetSupportedFsTypes() []int64 {
 	return nil
 }
 
-// CheckACLSupport implements Platform.CheckACLSupport for Unix systems
+// CheckACLSupport implements Platform.CheckACLSupport for OSX systems
 func (p *DarwinPlatform) CheckACLSupport() (bool, error) {
 	var stat FileSystemStats
 
@@ -87,17 +87,17 @@ func (p *DarwinPlatform) CheckSymlinkSupport() (bool, error) {
 	return true, nil
 }
 
-// CheckFIFOSupport implements Platform.CheckFIFOSupport for Unix systems
+// CheckFIFOSupport implements Platform.CheckFIFOSupport for OSX systems
 func (p *DarwinPlatform) CheckFIFOSupport() (bool, error) {
 	return true, nil
 }
 
-// SetReadOnly implements Platform.SetReadOnly for Unix systems
+// SetReadOnly implements Platform.SetReadOnly for OSX systems
 func (p *DarwinPlatform) SetReadOnly(path string) error {
 	return os.Chmod(filepath.Clean(path), 0o444)
 }
 
-// RemoveReadOnly implements Platform.RemoveReadOnly for Unix systems
+// RemoveReadOnly implements Platform.RemoveReadOnly for OSX systems
 func (p *DarwinPlatform) RemoveReadOnly(path string) error {
 	return os.Chmod(filepath.Clean(path), 0o644)
 }
