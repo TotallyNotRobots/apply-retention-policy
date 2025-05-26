@@ -25,18 +25,15 @@ load("@gazelle//:def.bzl", "gazelle")
 load("@rules_go//go:def.bzl", "go_binary", "go_library")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//:lint.bzl", "golangci_lint_config")
 
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
 gazelle(name = "gazelle")
 
 # gazelle:lang go,gofmt
 
-# Version-independent golangci-lint target
-alias(
-    name = "golangci-lint",
-    actual = "@golangci_lint//:golangci-lint",
-    visibility = ["//visibility:public"],
-)
+# Configure golangci-lint
+golangci_lint_config()
 
 go_library(
     name = "apply-retention-policy_lib",
