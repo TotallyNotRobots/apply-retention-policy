@@ -275,7 +275,6 @@ func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
 
 		return m.processFile(ctx, path, d, &files)
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrListFiles, err)
 	}

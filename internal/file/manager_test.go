@@ -139,7 +139,7 @@ func TestListFiles(t *testing.T) {
 
 	// Create a directory
 	dirPath := filepath.Join(dir, "subdir")
-	err = os.Mkdir(dirPath, 0755)
+	err = os.Mkdir(dirPath, 0o755)
 	require.NoError(t, err)
 
 	// Platform-specific tests
@@ -176,7 +176,7 @@ func TestListFiles(t *testing.T) {
 		t.Run("with named pipe", func(t *testing.T) {
 			// Create a named pipe
 			pipePath := filepath.Join(dir, "pipe")
-			err = mkfifo(pipePath, 0644)
+			err = mkfifo(pipePath, 0o644)
 			require.NoError(t, err)
 
 			// Verify the pipe exists and is a FIFO
@@ -259,7 +259,6 @@ func verifyACLs(t *testing.T, path string, entriesToCheck [][]string) {
 
 	cmd := exec.Command(getfaclPath, filepath.Clean(path)) // #nosec G204
 	output, err := cmd.Output()
-
 	if err != nil {
 		t.Skip("getfacl command failed:", err)
 	}
@@ -334,7 +333,7 @@ func testDeleteNonExistentFile(ctx context.Context, t *testing.T, manager *Manag
 
 func testDeleteDirectory(ctx context.Context, t *testing.T, manager *Manager, dir string) {
 	dirPath := filepath.Join(dir, "testdir")
-	err := os.Mkdir(dirPath, 0755)
+	err := os.Mkdir(dirPath, 0o755)
 	require.NoError(t, err)
 
 	dirInfo := Info{
@@ -358,7 +357,6 @@ func testDeleteSymlink(ctx context.Context, t *testing.T, manager *Manager, dir 
 
 	symlinkPath := filepath.Join(dir, "symlink")
 	err = os.Symlink(targetPath, symlinkPath)
-
 	if err != nil {
 		t.Skip("Symlink creation failed - may need elevated privileges")
 	}
@@ -405,7 +403,7 @@ func testDeleteFileWithGroupWrite(ctx context.Context, t *testing.T, manager *Ma
 	groupWritePath := filepath.Join(dir, "group-write.zip")
 	_, err := os.Create(groupWritePath)
 	require.NoError(t, err)
-	err = os.Chmod(groupWritePath, 0664)
+	err = os.Chmod(groupWritePath, 0o664)
 	require.NoError(t, err)
 
 	groupWriteInfo := Info{
@@ -414,7 +412,6 @@ func testDeleteFileWithGroupWrite(ctx context.Context, t *testing.T, manager *Ma
 		Size:      0,
 	}
 	err = manager.DeleteFile(ctx, groupWriteInfo, false)
-
 	if err != nil {
 		require.ErrorIs(t, err, ErrAccessDenied)
 	}
@@ -434,7 +431,7 @@ func testDeleteFileWithOtherWrite(ctx context.Context, t *testing.T, manager *Ma
 	err = f.Close()
 	require.NoError(t, err)
 
-	err = os.Chmod(otherWritePath, 0666)
+	err = os.Chmod(otherWritePath, 0o666)
 	require.NoError(t, err)
 
 	otherWriteInfo := Info{
@@ -505,7 +502,7 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 	aclPath := filepath.Join(dir, "acl-write.zip")
 	_, err := os.Create(aclPath)
 	require.NoError(t, err)
-	err = os.Chmod(aclPath, 0400)
+	err = os.Chmod(aclPath, 0o400)
 	require.NoError(t, err)
 
 	aclEntries := []string{
@@ -538,7 +535,6 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 		Size:      0,
 	}
 	err = manager.DeleteFile(ctx, aclInfo, false)
-
 	if err != nil {
 		t.Logf("DeleteFile failed with error: %v", err)
 	}
@@ -572,7 +568,7 @@ func testDeleteFileWithACLDenyWrite(
 	aclPath := filepath.Join(dir, "acl-deny.zip")
 	_, err := os.Create(aclPath)
 	require.NoError(t, err)
-	err = os.Chmod(aclPath, 0666)
+	err = os.Chmod(aclPath, 0o666)
 	require.NoError(t, err)
 
 	aclEntries := []string{

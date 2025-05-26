@@ -100,10 +100,10 @@ func (p *LinuxPlatform) CheckFIFOSupport() (bool, error) {
 
 // SetReadOnly implements Platform.SetReadOnly for Unix systems
 func (p *LinuxPlatform) SetReadOnly(path string) error {
-	return os.Chmod(filepath.Clean(path), 0444)
+	return os.Chmod(filepath.Clean(path), 0o444)
 }
 
 // RemoveReadOnly implements Platform.RemoveReadOnly for Unix systems
 func (p *LinuxPlatform) RemoveReadOnly(path string) error {
-	return os.Chmod(filepath.Clean(path), 0644)
+	return os.Chmod(filepath.Clean(path), 0o644)
 }
