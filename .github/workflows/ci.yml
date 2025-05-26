@@ -67,9 +67,10 @@ jobs:
       - name: Setup Go toolchain
         run: |
           # Use Bazel to download and setup the Go toolchain
-          bazel build @rules_go//go/tools/go_bin_runner:go_bin_runner
+          bazel run @rules_go//go -- version
           # Add the Go toolchain to PATH
           echo "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin" >> $GITHUB_PATH
+          ls "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin"
         shell: bash
 
       - name: print go version and path
