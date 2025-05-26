@@ -31,7 +31,7 @@ jobs:
           # Use Bazel to download and setup the Go toolchain
           bazel build @rules_go//go
           # Add the Go toolchain to PATH
-          echo "$(bazel info output_base)/external/rules_go++go_sdk+main___download_0/bin/go" >> $GITHUB_PATH
+          echo "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin/go" >> $GITHUB_PATH
         shell: bash
 
       - name: Run tests (${{ runner.os }})
@@ -44,14 +44,6 @@ jobs:
           fi
         shell: bash
 
-      - name: Run linter
-        run: bazel run //:golangci-lint -- run
-        shell: bash
-
-      - name: Run buildifier
-        run: bazel run //:buildifier.check
-        shell: bash
-
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: runner.os != 'Windows'
@@ -60,3 +52,30 @@ jobs:
           files: ./coverage.txt
           fail_ci_if_error: true
           verbose: true
+
+  lint:
+    name: Lint (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go toolchain
+        run: |
+          # Use Bazel to download and setup the Go toolchain
+          bazel build @rules_go//go
+          # Add the Go toolchain to PATH
+          echo "$(bazel info bazel-bin)/external/rules_go+/go/tools/go_bin_runner/bin/go" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Run linter
+        run: bazel run //:golangci-lint -- run
+        shell: bash
+
+      - name: Run buildifier
+        run: bazel run //:buildifier.check
+        shell: bash
