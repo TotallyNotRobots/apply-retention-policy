@@ -32,9 +32,9 @@ jobs:
             bazel-out
             bazel-testlogs
             bazel-apply-retention-policy
-          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          key: bazel-cache-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
-            bazel-cache-${{ runner.os }}-
+            bazel-cache-${{ runner.os }}-${{ github.job }}-
 
       - name: Run tests (${{ runner.os }})
         run: |
@@ -80,9 +80,9 @@ jobs:
             bazel-out
             bazel-testlogs
             bazel-apply-retention-policy
-          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          key: bazel-cache-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
-            bazel-cache-${{ runner.os }}-
+            bazel-cache-${{ runner.os }}-${{ github.job }}-
 
       - name: Set up Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5

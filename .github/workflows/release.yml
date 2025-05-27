@@ -29,9 +29,9 @@ jobs:
             bazel-out
             bazel-testlogs
             bazel-apply-retention-policy
-          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          key: bazel-cache-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
-            bazel-cache-${{ runner.os }}-
+            bazel-cache-${{ runner.os }}-${{ github.job }}-
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3
