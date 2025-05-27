@@ -22,9 +22,16 @@ jobs:
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: |
-            ~/.cache/bazel
+            # Platform-specific Bazel user directories
+            ${{ runner.os == 'Windows' && 'C:/Users/runneradmin/_bazel_runneradmin' || '' }}
             ${{ runner.os == 'Windows' && 'C:/Users/runneradmin/AppData/Local/Temp/bazel_*' || '' }}
             ${{ runner.os == 'macOS' && '~/Library/Caches/bazel' || '' }}
+            ${{ runner.os == 'Linux' && '~/.cache/bazel' || '' }}
+            # Bazel output directories
+            bazel-bin
+            bazel-out
+            bazel-testlogs
+            bazel-apply-retention-policy
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
             bazel-cache-${{ runner.os }}-
@@ -63,9 +70,16 @@ jobs:
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: |
-            ~/.cache/bazel
+            # Platform-specific Bazel user directories
+            ${{ runner.os == 'Windows' && 'C:/Users/runneradmin/_bazel_runneradmin' || '' }}
             ${{ runner.os == 'Windows' && 'C:/Users/runneradmin/AppData/Local/Temp/bazel_*' || '' }}
             ${{ runner.os == 'macOS' && '~/Library/Caches/bazel' || '' }}
+            ${{ runner.os == 'Linux' && '~/.cache/bazel' || '' }}
+            # Bazel output directories
+            bazel-bin
+            bazel-out
+            bazel-testlogs
+            bazel-apply-retention-policy
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
             bazel-cache-${{ runner.os }}-
