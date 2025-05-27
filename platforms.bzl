@@ -1,7 +1,11 @@
 """Platforms for the build."""
 
-def platforms():
-    """Define platform constraints."""
+def platforms(name = "platforms"):
+    """Define platform constraints.
+
+    Args:
+      name: The name of the platforms target to create. Defaults to "platforms".
+    """
 
     native.platform(
         name = "linux_amd64_platform",
