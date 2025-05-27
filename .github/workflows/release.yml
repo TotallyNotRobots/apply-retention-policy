@@ -18,9 +18,13 @@ jobs:
       - name: Cache Bazel cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
-          path: ~/.cache/bazel
+          path: |
+            ~/.cache/bazel
+            ${{ runner.os == 'Windows' && 'C:/Users/runneradmin/AppData/Local/Temp/bazel_*' || '' }}
+            ${{ runner.os == 'macOS' && '~/Library/Caches/bazel' || '' }}
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
-          restore-keys: bazel-cache-${{ runner.os }}-
+          restore-keys: |
+            bazel-cache-${{ runner.os }}-
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3

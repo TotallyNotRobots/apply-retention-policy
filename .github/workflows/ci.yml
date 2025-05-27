@@ -21,7 +21,10 @@ jobs:
       - name: Cache Bazel cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
-          path: ~/.cache/bazel
+          path: |
+            ~/.cache/bazel
+            ${{ runner.os == 'Windows' && 'C:/Users/runneradmin/AppData/Local/Temp/bazel_*' || '' }}
+            ${{ runner.os == 'macOS' && '~/Library/Caches/bazel' || '' }}
           key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
             bazel-cache-${{ runner.os }}-
@@ -55,6 +58,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Cache Bazel cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ${{ runner.os == 'Windows' && 'C:/Users/runneradmin/AppData/Local/Temp/bazel_*' || '' }}
+            ${{ runner.os == 'macOS' && '~/Library/Caches/bazel' || '' }}
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: |
+            bazel-cache-${{ runner.os }}-
 
       - name: Set up Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
