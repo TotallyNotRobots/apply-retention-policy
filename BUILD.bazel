@@ -57,23 +57,33 @@ pkg_tar(
     srcs = [":apply-retention-policy"],
     mode = "0o755",
     package_dir = "/usr/local/bin",
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
 )
 
+# Linux-specific container image targets
 oci_image(
-    name = "image",
+    name = "image_linux",
     base = "@distroless_base",
     entrypoint = ["/usr/local/bin/apply-retention-policy"],
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
     tars = [":binary_tar"],
 )
 
 oci_image_index(
     name = "image_multiarch",
     images = [
-        ":image",
+        ":image_linux",
     ],
     platforms = [
         ":linux_amd64_platform",
         ":linux_arm64_platform",
+    ],
+    target_compatible_with = [
+        "@platforms//os:linux",
     ],
 )
 
@@ -82,4 +92,7 @@ oci_push(
     name = "push",
     image = ":image_multiarch",
     repository = "ghcr.io/totallynotrobots/apply-retention-policy",
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
 )
