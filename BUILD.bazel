@@ -26,6 +26,7 @@ load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//tools:lint.bzl", "buildifier_config", "golangci_lint_config")
 load("//tools:platforms.bzl", "platforms")
+load("//tools:package.bzl", "go_release_package")
 
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
 gazelle(name = "gazelle")
@@ -94,5 +95,59 @@ oci_push(
     repository = "ghcr.io/totallynotrobots/apply-retention-policy",
     target_compatible_with = [
         "@platforms//os:linux",
+    ],
+)
+
+go_release_package(
+    name = "apply-retention-policy-linux-amd64",
+    cpu = "amd64",
+    os = "linux",
+    target = ":apply-retention-policy",
+)
+
+go_release_package(
+    name = "apply-retention-policy-linux-arm64",
+    cpu = "arm64",
+    os = "linux",
+    target = ":apply-retention-policy",
+)
+
+go_release_package(
+    name = "apply-retention-policy-darwin-amd64",
+    cpu = "amd64",
+    os = "darwin",
+    target = ":apply-retention-policy",
+)
+
+go_release_package(
+    name = "apply-retention-policy-darwin-arm64",
+    cpu = "arm64",
+    os = "darwin",
+    target = ":apply-retention-policy",
+)
+
+go_release_package(
+    name = "apply-retention-policy-windows-amd64",
+    cpu = "amd64",
+    os = "windows",
+    target = ":apply-retention-policy",
+)
+
+go_release_package(
+    name = "apply-retention-policy-windows-arm64",
+    cpu = "arm64",
+    os = "windows",
+    target = ":apply-retention-policy",
+)
+
+filegroup(
+    name = "release_files",
+    srcs = [
+        ":apply-retention-policy-linux-amd64.tar.gz",
+        ":apply-retention-policy-linux-arm64.tar.gz",
+        ":apply-retention-policy-darwin-amd64.tar.gz",
+        ":apply-retention-policy-darwin-arm64.tar.gz",
+        ":apply-retention-policy-windows-amd64.zip",
+        ":apply-retention-policy-windows-arm64.zip",
     ],
 )

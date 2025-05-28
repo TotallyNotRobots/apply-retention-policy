@@ -53,31 +53,12 @@ jobs:
 
       - name: Build apply-retention-policy
         run: |
+          bazel build //:release_files --define=version=${{ steps.get_version.outputs.VERSION }}
           mkdir -p out
+          cd out
 
-          # Build for Linux x86_64
-          bazel build //:apply-retention-policy --platforms=@rules_go//go/toolchain:linux_amd64
-          cp $(bazel info bazel-bin)/apply-retention-policy_/apply-retention-policy ./out/apply-retention-policy-linux-amd64
-
-          # Build for Linux arm64
-          bazel build //:apply-retention-policy --platforms=@rules_go//go/toolchain:linux_arm64
-          cp $(bazel info bazel-bin)/apply-retention-policy_/apply-retention-policy ./out/apply-retention-policy-linux-arm64
-
-          # Build for Darwin x86_64
-          bazel build //:apply-retention-policy --platforms=@rules_go//go/toolchain:darwin_amd64
-          cp $(bazel info bazel-bin)/apply-retention-policy_/apply-retention-policy ./out/apply-retention-policy-darwin-amd64
-
-          # Build for Darwin arm64
-          bazel build //:apply-retention-policy --platforms=@rules_go//go/toolchain:darwin_arm64
-          cp $(bazel info bazel-bin)/apply-retention-policy_/apply-retention-policy ./out/apply-retention-policy-darwin-arm64
-
-          # Build for Windows x86_64
-          bazel build //:apply-retention-policy --platforms=@rules_go//go/toolchain:windows_amd64
-          cp $(bazel info bazel-bin)/apply-retention-policy_/apply-retention-policy.exe ./out/apply-retention-policy-windows-amd64.exe
-
-          # Build for Windows arm64
-          bazel build //:apply-retention-policy --platforms=@rules_go//go/toolchain:windows_arm64
-          cp $(bazel info bazel-bin)/apply-retention-policy_/apply-retention-policy.exe ./out/apply-retention-policy-windows-arm64.exe
+          cp "$(bazel info bazel-bin)/apply-retention-policy-*.tar.gz" .
+          cp "$(bazel info bazel-bin)/apply-retention-policy-*.zip" .
 
       - name: Make checksums
         working-directory: out
