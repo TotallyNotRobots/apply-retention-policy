@@ -20,5 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# This file is intentionally empty since we removed the lint source update scripts.
-# It's kept as a placeholder in case we need to add tools in the future.
+"""Tools package for build configuration."""
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "platforms.bzl",
+    "lint.bzl",
+])

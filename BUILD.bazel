@@ -24,8 +24,8 @@ load("@gazelle//:def.bzl", "gazelle")
 load("@rules_go//go:def.bzl", "go_binary", "go_library")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//:lint.bzl", "buildifier_config", "golangci_lint_config")
-load("//:platforms.bzl", "platforms")
+load("//tools:lint.bzl", "buildifier_config", "golangci_lint_config")
+load("//tools:platforms.bzl", "platforms")
 
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
 gazelle(name = "gazelle")
