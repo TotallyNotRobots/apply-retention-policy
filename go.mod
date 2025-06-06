@@ -2,7 +2,7 @@ module github.com/TotallyNotRobots/apply-retention-policy
 
 go 1.23.9
 
-toolchain go1.24.3
+toolchain go1.24.4
 
 require (
 	github.com/spf13/cobra v1.9.1
