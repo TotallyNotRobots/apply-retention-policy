@@ -50,6 +50,21 @@ linters:
     - wrapcheck
     - wsl
   settings:
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        # - experimental
+        # - opinionated
+        - performance
+        # - style
+    gocyclo:
+      min-complexity: 10
+    govet:
+      enable:
+        - shadow
     revive:
       rules:
         - name: argument-limit
@@ -79,30 +94,10 @@ linters:
         - name: var-declaration
         - name: var-naming
         - name: waitgroup-by-value
-    gocritic:
-      enabled-tags:
-        - diagnostic
-        # - experimental
-        # - opinionated
-        - performance
-        # - style
-    gocyclo:
-      min-complexity: 10
-    goconst:
-      min-len: 2
-      min-occurrences: 3
-    govet:
-      enable:
-        - shadow
     staticcheck:
       checks:
         - all
   exclusions:
-    # presets:
-      # - comments
-      # - std-error-handling
-      # - common-false-positives
-      # - legacy
     warn-unused: true
     generated: strict
     rules:
