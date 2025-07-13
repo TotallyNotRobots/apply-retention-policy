@@ -27,7 +27,14 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
 
 def go_release_package(name, cpu, os, target):
-    """Package a binary for distribution."""
+    """Package a binary for distribution.
+
+    Args:
+        name: The name of the package.
+        cpu: The CPU architecture.
+        os: The operating system.
+        target: The target platform.
+    """
 
     # Build the binary
     go_cross_binary(
