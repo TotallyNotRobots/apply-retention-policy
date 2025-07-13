@@ -41,8 +41,8 @@ http_archive(
 exports_files(["golangci-lint"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint golangci-lint"],
-    sha256 = "582eb73880f4408d7fb89f12b502d577bd7b0b63d8c681da92bb6b9d934d4363",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.1.6/golangci-lint-2.1.6-linux-arm64.tar.gz"],
+    sha256 = "fce5317bb885db91d4104dfb4dc4fd0574ae266775b62132dcb39ffe322119bb",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-linux-arm64.tar.gz"],
 )
 
 http_archive(
