@@ -39,7 +39,7 @@ import (
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/retention"
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/util"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/must"
 )
 
 // pruneCmd represents the prune command
@@ -127,8 +127,8 @@ func init() {
 		StringVarP(&cfgFile, "config", "c", "", "Path to config file")
 
 	// Bind flags to config
-	util.Must(viper.BindPFlag("dry_run", pruneCmd.Flags().Lookup("dry-run")))
-	util.Must(
+	must.Must(viper.BindPFlag("dry_run", pruneCmd.Flags().Lookup("dry-run")))
+	must.Must(
 		viper.BindPFlag("log_level", pruneCmd.Flags().Lookup("log-level")),
 	)
 }

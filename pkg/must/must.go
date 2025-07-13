@@ -22,9 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package util provides utility functions for common operations.
-// It includes functions for handling errors and other common tasks.
-package util
+// Package must provides utility functions for handling errors.
+package must
 
 // Must panics if the given error is not nil.
 // This is useful for handling errors that should
@@ -35,10 +34,10 @@ func Must(err error) {
 	}
 }
 
-// MustReturn returns the value if err is nil, otherwise it panics.
+// Return returns the value if err is nil, otherwise it panics.
 // This is useful for handling errors that should never occur in normal
 // operation, while also returning a value in the success case.
-func MustReturn[T any](val T, err error) T {
+func Return[T any](val T, err error) T {
 	if err != nil {
 		panic(err)
 	}

@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package util provides various utilities for the application.
-package util
+// Package files provides platform-specific file operations.
+package files
 
 import (
 	"errors"

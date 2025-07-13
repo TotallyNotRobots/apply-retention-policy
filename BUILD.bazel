@@ -25,8 +25,8 @@ load("@rules_go//go:def.bzl", "go_binary", "go_library")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//tools:lint.bzl", "buildifier_config", "golangci_lint_config")
-load("//tools:platforms.bzl", "platforms")
 load("//tools:package.bzl", "go_release_package")
+load("//tools:platforms.bzl", "platforms")
 
 # gazelle:prefix github.com/TotallyNotRobots/apply-retention-policy
 gazelle(name = "gazelle")
@@ -143,10 +143,10 @@ go_release_package(
 filegroup(
     name = "release_files",
     srcs = [
-        ":apply-retention-policy-linux-amd64.tar.gz",
-        ":apply-retention-policy-linux-arm64.tar.gz",
         ":apply-retention-policy-darwin-amd64.tar.gz",
         ":apply-retention-policy-darwin-arm64.tar.gz",
+        ":apply-retention-policy-linux-amd64.tar.gz",
+        ":apply-retention-policy-linux-arm64.tar.gz",
         ":apply-retention-policy-windows-amd64.zip",
         ":apply-retention-policy-windows-arm64.zip",
     ],

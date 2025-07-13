@@ -39,8 +39,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/files"
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/util"
 )
 
 func init() {
@@ -54,14 +54,14 @@ const (
 
 // setReadOnly makes a file read-only in a platform-independent way
 func setReadOnly(t *testing.T, path string) {
-	plat := util.NewPlatform()
+	plat := files.NewPlatform()
 	err := plat.SetReadOnly(path)
 	require.NoError(t, err, "Failed to set read-only attribute")
 }
 
 // removeReadOnly removes read-only attribute in a platform-independent way
 func removeReadOnly(t *testing.T, path string) {
-	plat := util.NewPlatform()
+	plat := files.NewPlatform()
 	err := plat.RemoveReadOnly(path)
 	require.NoError(t, err, "Failed to remove read-only attribute")
 }
@@ -104,7 +104,7 @@ func TestNewManager(t *testing.T) {
 }
 
 func mkfifo(path string, mode uint32) error {
-	plat := util.NewPlatform()
+	plat := files.NewPlatform()
 	return plat.Mkfifo(path, mode)
 }
 
@@ -119,13 +119,13 @@ func TestListFiles(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create test files
-	files := []string{
+	names := []string{
 		"backup-202501010000.zip",
 		"backup-202501020000.zip",
 		"backup-202501030000.zip",
 	}
 
-	for _, file := range files {
+	for _, file := range names {
 		path := filepath.Clean(filepath.Join(dir, file))
 
 		var f *os.File
@@ -143,7 +143,7 @@ func TestListFiles(t *testing.T) {
 	require.NoError(t, err)
 
 	// Platform-specific tests
-	plat := util.NewPlatform()
+	plat := files.NewPlatform()
 
 	// Symlink test
 	symlinkSupport, _ := plat.CheckSymlinkSupport()
@@ -152,7 +152,7 @@ func TestListFiles(t *testing.T) {
 			// Create a symlink
 			symlinkPath := filepath.Join(dir, "symlink")
 
-			err = os.Symlink(filepath.Join(dir, files[0]), symlinkPath)
+			err = os.Symlink(filepath.Join(dir, names[0]), symlinkPath)
 			if err != nil {
 				t.Skip("Symlink creation failed - may need elevated privileges")
 			}
@@ -160,11 +160,11 @@ func TestListFiles(t *testing.T) {
 			// List files and verify symlink is not included
 			list, listErr := manager.ListFiles(ctx)
 			require.NoError(t, listErr)
-			require.Len(t, list, len(files))
+			require.Len(t, list, len(names))
 
 			for _, file := range list {
 				base := filepath.Base(file.Path)
-				require.Contains(t, files, base)
+				require.Contains(t, names, base)
 				require.NotEqual(t, "symlink", base, "Symlink should not be included in results")
 			}
 		})
@@ -191,11 +191,11 @@ func TestListFiles(t *testing.T) {
 			// List files and verify the pipe is not included
 			list, listErr := manager.ListFiles(ctx)
 			require.NoError(t, listErr)
-			require.Len(t, list, len(files))
+			require.Len(t, list, len(names))
 
 			for _, file := range list {
 				base := filepath.Base(file.Path)
-				require.Contains(t, files, base)
+				require.Contains(t, names, base)
 				require.NotEqual(t, "pipe", base, "Named pipe should not be included in results")
 			}
 
@@ -209,11 +209,11 @@ func TestListFiles(t *testing.T) {
 	t.Run("list regular files", func(t *testing.T) {
 		list, listErr := manager.ListFiles(ctx)
 		require.NoError(t, listErr)
-		require.Len(t, list, len(files))
+		require.Len(t, list, len(names))
 
 		for _, file := range list {
 			base := filepath.Base(file.Path)
-			require.Contains(t, files, base)
+			require.Contains(t, names, base)
 		}
 	})
 
@@ -455,7 +455,7 @@ func testDeleteFileWithOtherWrite(ctx context.Context, t *testing.T, manager *Ma
 }
 
 func checkACLSupport() bool {
-	plat := util.NewPlatform()
+	plat := files.NewPlatform()
 
 	support, err := plat.CheckACLSupport()
 	if err != nil {
@@ -466,7 +466,7 @@ func checkACLSupport() bool {
 }
 
 func checkSymlinkSupport() bool {
-	plat := util.NewPlatform()
+	plat := files.NewPlatform()
 
 	support, err := plat.CheckSymlinkSupport()
 	if err != nil {
@@ -687,7 +687,7 @@ func TestDeleteFile(t *testing.T) {
 	})
 
 	// Platform-specific tests that should be skipped on Windows
-	plat := util.NewPlatform()
+	plat := files.NewPlatform()
 
 	symlinkSupport, _ := plat.CheckSymlinkSupport()
 	if symlinkSupport {

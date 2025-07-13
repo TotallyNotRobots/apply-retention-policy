@@ -1,0 +1,22 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "files",
+    srcs = [
+        "files.go",
+        "files_darwin.go",
+        "files_linux.go",
+        "files_windows.go",
+    ],
+    importpath = "github.com/TotallyNotRobots/apply-retention-policy/pkg/files",
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@rules_go//go/platform:android": [
+            "@org_golang_x_sys//unix",
+        ],
+        "@rules_go//go/platform:linux": [
+            "@org_golang_x_sys//unix",
+        ],
+        "//conditions:default": [],
+    }),
+)
