@@ -81,8 +81,8 @@ http_archive(
 exports_files(["golangci-lint.exe"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint.exe golangci-lint.exe"],
-    sha256 = "17b50c236e3009f53ef5bef8b884bdb7137d956c806ab700553938d121278d0a",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-windows-arm64.zip"],
+    sha256 = "125efde831d81e2546c1a33fb4436e36ad25baf47c882f8e6a5665bb4f81f386",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.3.1/golangci-lint-2.3.1-windows-arm64.zip"],
 )
 
 # Register Go toolchain
