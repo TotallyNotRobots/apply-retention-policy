@@ -55,14 +55,14 @@ const (
 // setReadOnly makes a file read-only in a platform-independent way
 func setReadOnly(t *testing.T, path string) {
 	plat := files.NewPlatform()
-	err := plat.SetReadOnly(path)
+	err := plat.SetReadOnly(t.Context(), path)
 	require.NoError(t, err, "Failed to set read-only attribute")
 }
 
 // removeReadOnly removes read-only attribute in a platform-independent way
 func removeReadOnly(t *testing.T, path string) {
 	plat := files.NewPlatform()
-	err := plat.RemoveReadOnly(path)
+	err := plat.RemoveReadOnly(t.Context(), path)
 	require.NoError(t, err, "Failed to remove read-only attribute")
 }
 

@@ -43,9 +43,6 @@ func TestPruneCommand(t *testing.T) {
 	defer logger.SetTestMode(false)
 
 	tmpDir := t.TempDir()
-
-	cwd, err := os.Getwd()
-	require.NoError(t, err)
 	t.Chdir(tmpDir)
 
 	// Create test files
@@ -78,7 +75,7 @@ func TestPruneCommand(t *testing.T) {
 
 	for _, tf := range testFiles {
 		path := filepath.Join(tmpDir, tf.name)
-		err = os.WriteFile(path, []byte(tf.content), 0o600)
+		err := os.WriteFile(path, []byte(tf.content), 0o600)
 		require.NoError(t, err)
 	}
 
@@ -95,7 +92,7 @@ dry_run: false
 log_level: "debug"
 `
 	configFile := filepath.Join(tmpDir, "retention-policy.yaml")
-	err = os.WriteFile(configFile, []byte(configContent), 0o600)
+	err := os.WriteFile(configFile, []byte(configContent), 0o600)
 	require.NoError(t, err)
 
 	// Set up viper for all tests

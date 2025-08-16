@@ -28,6 +28,7 @@ THE SOFTWARE.
 package files
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -94,11 +95,11 @@ func (p *DarwinPlatform) CheckFIFOSupport() (bool, error) {
 }
 
 // SetReadOnly implements Platform.SetReadOnly for OSX systems
-func (p *DarwinPlatform) SetReadOnly(path string) error {
+func (p *DarwinPlatform) SetReadOnly(ctx context.Context, path string) error {
 	return os.Chmod(filepath.Clean(path), 0o400)
 }
 
 // RemoveReadOnly implements Platform.RemoveReadOnly for OSX systems
-func (p *DarwinPlatform) RemoveReadOnly(path string) error {
+func (p *DarwinPlatform) RemoveReadOnly(ctx context.Context, path string) error {
 	return os.Chmod(filepath.Clean(path), 0o600)
 }

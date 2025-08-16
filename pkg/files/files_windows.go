@@ -28,6 +28,7 @@ THE SOFTWARE.
 package files
 
 import (
+	"context"
 	"os/exec"
 	"path/filepath"
 )
@@ -71,15 +72,15 @@ func (p *WindowsPlatform) CheckFIFOSupport() (bool, error) {
 }
 
 // SetReadOnly implements Platform.SetReadOnly for Windows
-func (p *WindowsPlatform) SetReadOnly(path string) error {
+func (p *WindowsPlatform) SetReadOnly(ctx context.Context, path string) error {
 	// #nosec G204 - path is cleaned with filepath.Clean before use
-	cmd := exec.Command("attrib", "+R", filepath.Clean(path))
+	cmd := exec.CommandContext(ctx, "attrib", "+R", filepath.Clean(path))
 	return cmd.Run()
 }
 
 // RemoveReadOnly implements Platform.RemoveReadOnly for Windows
-func (p *WindowsPlatform) RemoveReadOnly(path string) error {
+func (p *WindowsPlatform) RemoveReadOnly(ctx context.Context, path string) error {
 	// #nosec G204 - path is cleaned with filepath.Clean before use
-	cmd := exec.Command("attrib", "-R", filepath.Clean(path))
+	cmd := exec.CommandContext(ctx, "attrib", "-R", filepath.Clean(path))
 	return cmd.Run()
 }

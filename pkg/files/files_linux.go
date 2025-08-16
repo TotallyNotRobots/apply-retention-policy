@@ -28,6 +28,7 @@ THE SOFTWARE.
 package files
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -100,11 +101,11 @@ func (p *LinuxPlatform) CheckFIFOSupport() (bool, error) {
 }
 
 // SetReadOnly implements Platform.SetReadOnly for Linux systems
-func (p *LinuxPlatform) SetReadOnly(path string) error {
+func (p *LinuxPlatform) SetReadOnly(ctx context.Context, path string) error {
 	return os.Chmod(filepath.Clean(path), 0o400)
 }
 
 // RemoveReadOnly implements Platform.RemoveReadOnly for Linux systems
-func (p *LinuxPlatform) RemoveReadOnly(path string) error {
+func (p *LinuxPlatform) RemoveReadOnly(ctx context.Context, path string) error {
 	return os.Chmod(filepath.Clean(path), 0o600)
 }

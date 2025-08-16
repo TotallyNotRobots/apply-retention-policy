@@ -26,6 +26,7 @@ THE SOFTWARE.
 package files
 
 import (
+	"context"
 	"errors"
 )
 
@@ -52,9 +53,9 @@ type Platform interface {
 	// CheckFIFOSupport checks if the system supports named pipes (FIFOs)
 	CheckFIFOSupport() (bool, error)
 	// SetReadOnly makes a file read-only
-	SetReadOnly(path string) error
+	SetReadOnly(ctx context.Context, path string) error
 	// RemoveReadOnly removes read-only attribute from a file
-	RemoveReadOnly(path string) error
+	RemoveReadOnly(ctx context.Context, path string) error
 }
 
 // Platform-specific implementations are in separate files with build tags
