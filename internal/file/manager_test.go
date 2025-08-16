@@ -129,6 +129,7 @@ func TestListFiles(t *testing.T) {
 		path := filepath.Clean(filepath.Join(dir, file))
 
 		var f *os.File
+
 		f, err = os.Create(path)
 		require.NoError(t, err)
 
@@ -258,6 +259,7 @@ func verifyACLs(t *testing.T, path string, entriesToCheck [][]string) {
 	}
 
 	cmd := exec.Command(getfaclPath, filepath.Clean(path)) // #nosec G204
+
 	output, err := cmd.Output()
 	if err != nil {
 		t.Skip("getfacl command failed:", err)
@@ -356,6 +358,7 @@ func testDeleteSymlink(ctx context.Context, t *testing.T, manager *Manager, dir 
 	require.NoError(t, err)
 
 	symlinkPath := filepath.Join(dir, "symlink")
+
 	err = os.Symlink(targetPath, symlinkPath)
 	if err != nil {
 		t.Skip("Symlink creation failed - may need elevated privileges")
@@ -382,8 +385,8 @@ func testDeleteReadOnlyFile(ctx context.Context, t *testing.T, manager *Manager,
 	_, err := os.Create(readOnlyPath)
 	require.NoError(t, err)
 	setReadOnly(t, readOnlyPath)
-	chownErr := os.Chown(readOnlyPath, 65534, -1)
 
+	chownErr := os.Chown(readOnlyPath, 65534, -1)
 	if chownErr != nil {
 		t.Skipf("Skipping test: unable to chown file to another user: %v", chownErr)
 	}
@@ -411,6 +414,7 @@ func testDeleteFileWithGroupWrite(ctx context.Context, t *testing.T, manager *Ma
 		Timestamp: time.Now(),
 		Size:      0,
 	}
+
 	err = manager.DeleteFile(ctx, groupWriteInfo, false)
 	if err != nil {
 		require.ErrorIs(t, err, ErrAccessDenied)
@@ -534,6 +538,7 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 		Timestamp: time.Now(),
 		Size:      0,
 	}
+
 	err = manager.DeleteFile(ctx, aclInfo, false)
 	if err != nil {
 		t.Logf("DeleteFile failed with error: %v", err)
@@ -584,8 +589,8 @@ func testDeleteFileWithACLDenyWrite(
 		{"other::r--"},
 	}
 	verifyACLs(t, aclPath, entriesToCheck)
-	chownErr := os.Chown(aclPath, 65534, -1)
 
+	chownErr := os.Chown(aclPath, 65534, -1)
 	if chownErr != nil {
 		t.Skipf("Skipping test: unable to chown file to another user: %v", chownErr)
 	}
@@ -603,8 +608,8 @@ func testDeleteFileWithACLDenyWrite(
 		Timestamp: time.Now(),
 		Size:      0,
 	}
-	err = manager.DeleteFile(ctx, aclInfo, false)
 
+	err = manager.DeleteFile(ctx, aclInfo, false)
 	if err == nil {
 		t.Log("DeleteFile succeeded when it should have failed")
 	} else {

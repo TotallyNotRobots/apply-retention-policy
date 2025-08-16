@@ -39,6 +39,7 @@ linters:
     - ireturn
     - mnd
     - nlreturn
+    - noinlineerr
     - paralleltest
     - perfsprint
     - tagliatelle
