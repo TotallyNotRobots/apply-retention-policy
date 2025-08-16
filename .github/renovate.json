@@ -14,9 +14,10 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["/^golangci_lint_.*$/"],
+      "matchPackageNames": ["/^golangci_lint_/"],
       "groupName": "golangci-lint",
-      "groupSlug": "golangci-lint"
+      "description": "Golangci-lint",
+      "matchDepTypes": ["http_archive"]
     }
   ],
   "bazel": {
