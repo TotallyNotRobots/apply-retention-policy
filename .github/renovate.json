@@ -12,6 +12,13 @@
     "docker:pinDigests",
     "helpers:pinGitHubActionDigests"
   ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["/^golangci_lint_.*$/"],
+      "groupName": "golangci-lint",
+      "groupSlug": "golangci-lint"
+    }
+  ],
   "bazel": {
     "enabled": true,
     "managerFilePatterns": [
