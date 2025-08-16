@@ -31,8 +31,8 @@ http_archive(
 exports_files(["golangci-lint"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint golangci-lint"],
-    sha256 = "c27fbde948a87d326feacd21df2f61a9c54dbd2e3bfa185c0a1cd6917a6f964f",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-linux-amd64.tar.gz"],
+    sha256 = "fae792524c04424c0ac369f5b8076f04b45cf29fc945a370e55d369a8dc11840",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.4.0/golangci-lint-2.4.0-linux-amd64.tar.gz"],
 )
 
 http_archive(
@@ -41,8 +41,8 @@ http_archive(
 exports_files(["golangci-lint"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint golangci-lint"],
-    sha256 = "fce5317bb885db91d4104dfb4dc4fd0574ae266775b62132dcb39ffe322119bb",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-linux-arm64.tar.gz"],
+    sha256 = "70ac11f55b80ec78fd3a879249cc9255121b8dfd7f7ed4fc46ed137f4abf17e7",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.4.0/golangci-lint-2.4.0-linux-arm64.tar.gz"],
 )
 
 http_archive(
@@ -51,8 +51,8 @@ http_archive(
 exports_files(["golangci-lint"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint golangci-lint"],
-    sha256 = "d7e2d0b2b16ef5ba6d8055f098351ba9d90cb658a38128fdd076500f40036054",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-darwin-amd64.tar.gz"],
+    sha256 = "7904ce63f79db44934939cf7a063086ea0ea98e9b19eba0a9d52ccdd0d21951c",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.4.0/golangci-lint-2.4.0-darwin-amd64.tar.gz"],
 )
 
 http_archive(
@@ -61,8 +61,8 @@ http_archive(
 exports_files(["golangci-lint"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint golangci-lint"],
-    sha256 = "d84d94d042c0d495fd1746f3d18948a75de163b17a14e8de3ef840928dd2df74",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-darwin-arm64.tar.gz"],
+    sha256 = "cd4dd53fa09b6646baff5fd22b8c64d91db02c21c7496df27992d75d34feec59",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.4.0/golangci-lint-2.4.0-darwin-arm64.tar.gz"],
 )
 
 http_archive(
@@ -71,8 +71,8 @@ http_archive(
 exports_files(["golangci-lint.exe"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint.exe golangci-lint.exe"],
-    sha256 = "e82054f082c828339ffce7bf8de53c4ae4df424a470d37fb59eb4380ac25bfba",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-windows-amd64.zip"],
+    sha256 = "003112f7a56746feaabf20b744054bf9acdf900c9e77176383623c4b1d76aaa9",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.4.0/golangci-lint-2.4.0-windows-amd64.zip"],
 )
 
 http_archive(
@@ -81,8 +81,8 @@ http_archive(
 exports_files(["golangci-lint.exe"])
 """,
     patch_cmds = ["cp golangci-lint-*/golangci-lint.exe golangci-lint.exe"],
-    sha256 = "17b50c236e3009f53ef5bef8b884bdb7137d956c806ab700553938d121278d0a",
-    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-windows-arm64.zip"],
+    sha256 = "dc0c2092af5d47fc2cd31a1dfe7b4c7e765fab22de98bd21ef2ffcc53ad9f54f",
+    urls = ["https://github.com/golangci/golangci-lint/releases/download/v2.4.0/golangci-lint-2.4.0-windows-arm64.zip"],
 )
 
 # Register Go toolchain
