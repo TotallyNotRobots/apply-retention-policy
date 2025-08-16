@@ -46,13 +46,7 @@ func TestPruneCommand(t *testing.T) {
 
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
-	err = os.Chdir(tmpDir)
-	require.NoError(t, err)
-
-	defer func() {
-		err = os.Chdir(cwd)
-		require.NoError(t, err)
-	}()
+	t.Chdir(tmpDir)
 
 	// Create test files
 	testFiles := []struct {
