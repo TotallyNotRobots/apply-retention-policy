@@ -175,7 +175,7 @@ log_level: "debug"
 		err := viper.ReadInConfig()
 		require.NoError(t, err)
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
 		cmd := pruneCmd

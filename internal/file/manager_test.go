@@ -53,16 +53,16 @@ const (
 )
 
 // setReadOnly makes a file read-only in a platform-independent way
-func setReadOnly(t *testing.T, path string) {
+func setReadOnly(ctx context.Context, t *testing.T, path string) {
 	plat := files.NewPlatform()
-	err := plat.SetReadOnly(t.Context(), path)
+	err := plat.SetReadOnly(ctx, path)
 	require.NoError(t, err, "Failed to set read-only attribute")
 }
 
 // removeReadOnly removes read-only attribute in a platform-independent way
-func removeReadOnly(t *testing.T, path string) {
+func removeReadOnly(ctx context.Context, t *testing.T, path string) {
 	plat := files.NewPlatform()
-	err := plat.RemoveReadOnly(t.Context(), path)
+	err := plat.RemoveReadOnly(ctx, path)
 	require.NoError(t, err, "Failed to remove read-only attribute")
 }
 
@@ -385,7 +385,7 @@ func testDeleteReadOnlyFile(ctx context.Context, t *testing.T, manager *Manager,
 	readOnlyPath := filepath.Join(dir, "readonly.zip")
 	_, err := os.Create(readOnlyPath)
 	require.NoError(t, err)
-	setReadOnly(t, readOnlyPath)
+	setReadOnly(ctx, t, readOnlyPath)
 
 	chownErr := os.Chown(readOnlyPath, 65534, -1)
 	if chownErr != nil {
@@ -400,7 +400,7 @@ func testDeleteReadOnlyFile(ctx context.Context, t *testing.T, manager *Manager,
 	err = manager.DeleteFile(ctx, readOnlyInfo, false)
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrAccessDenied)
-	removeReadOnly(t, readOnlyPath)
+	removeReadOnly(ctx, t, readOnlyPath)
 }
 
 func testDeleteFileWithGroupWrite(ctx context.Context, t *testing.T, manager *Manager, dir string) {
@@ -621,8 +621,8 @@ func testDeleteFileWithACLDenyWrite(
 	require.ErrorIs(t, err, ErrAccessDenied)
 }
 
-func testContextCancellation(t *testing.T, manager *Manager, info Info) {
-	cancelledCtx, cancel := context.WithCancel(context.Background())
+func testContextCancellation(ctx context.Context, t *testing.T, manager *Manager, info Info) {
+	cancelledCtx, cancel := context.WithCancel(ctx)
 	cancel()
 
 	err := manager.DeleteFile(cancelledCtx, info, false)
@@ -642,7 +642,7 @@ func TestDeleteFile(t *testing.T) {
 
 	// Basic file operations that work on all platforms
 	t.Run("delete regular file", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		dir := t.TempDir()
 		log := &logger.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -651,7 +651,7 @@ func TestDeleteFile(t *testing.T) {
 		testDeleteRegularFile(ctx, t, manager, path, info)
 	})
 	t.Run("delete non-existent file", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		dir := t.TempDir()
 		log := &logger.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -659,7 +659,7 @@ func TestDeleteFile(t *testing.T) {
 		testDeleteNonExistentFile(ctx, t, manager, dir)
 	})
 	t.Run("delete directory", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		dir := t.TempDir()
 		log := &logger.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -667,7 +667,7 @@ func TestDeleteFile(t *testing.T) {
 		testDeleteDirectory(ctx, t, manager, dir)
 	})
 	t.Run("delete file with other write permission", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		dir := t.TempDir()
 		log := &logger.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -675,15 +675,16 @@ func TestDeleteFile(t *testing.T) {
 		testDeleteFileWithOtherWrite(ctx, t, manager, dir)
 	})
 	t.Run("context cancellation", func(t *testing.T) {
+		ctx := t.Context()
 		dir := t.TempDir()
 		log := &logger.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
 		require.NoError(t, err)
 		_, info := setupTestFile(t, dir, "backup-202501010000.zip")
-		testContextCancellation(t, manager, info)
+		testContextCancellation(ctx, t, manager, info)
 	})
 	t.Run("dry run", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		dir := t.TempDir()
 		log := &logger.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -698,7 +699,7 @@ func TestDeleteFile(t *testing.T) {
 	symlinkSupport, _ := plat.CheckSymlinkSupport()
 	if symlinkSupport {
 		t.Run("delete symlink", func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			dir := t.TempDir()
 			log := &logger.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -710,7 +711,7 @@ func TestDeleteFile(t *testing.T) {
 	aclSupport, _ := plat.CheckACLSupport()
 	if aclSupport {
 		t.Run("delete file with ACL write permission", func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			dir := t.TempDir()
 			log := &logger.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -718,7 +719,7 @@ func TestDeleteFile(t *testing.T) {
 			testDeleteFileWithACLWrite(ctx, t, manager, dir)
 		})
 		t.Run("delete file with ACL deny write", func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			dir := t.TempDir()
 			log := &logger.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -730,7 +731,7 @@ func TestDeleteFile(t *testing.T) {
 	// Group write test may fail on Windows due to different permission model
 	if runtime.GOOS != "windows" {
 		t.Run("delete file with group write permission", func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			dir := t.TempDir()
 			log := &logger.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
@@ -742,7 +743,7 @@ func TestDeleteFile(t *testing.T) {
 	// Read-only test may need platform-specific handling
 	if runtime.GOOS != "windows" {
 		t.Run("delete read-only file", func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			dir := t.TempDir()
 			log := &logger.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(log))
