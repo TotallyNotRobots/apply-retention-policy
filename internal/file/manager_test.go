@@ -111,7 +111,7 @@ func mkfifo(path string, mode uint32) error {
 func TestListFiles(t *testing.T) {
 	t.Parallel()
 	// Setup
-	ctx := context.Background()
+	ctx := t.Context()
 	log := &logger.Logger{Logger: zap.NewNop()}
 	dir := t.TempDir()
 
@@ -220,7 +220,7 @@ func TestListFiles(t *testing.T) {
 
 	// Test with cancelled context
 	t.Run("cancelled context", func(t *testing.T) {
-		cancelledCtx, cancel := context.WithCancel(context.Background())
+		cancelledCtx, cancel := context.WithCancel(t.Context())
 		cancel() // Cancel immediately
 
 		_, err = manager.ListFiles(cancelledCtx)
@@ -252,13 +252,13 @@ func setupTestFile(t *testing.T, dir, filename string) (string, Info) {
 }
 
 // verifyACLs checks if the specified ACL entries are present in the file's ACLs
-func verifyACLs(t *testing.T, path string, entriesToCheck [][]string) {
+func verifyACLs(ctx context.Context, t *testing.T, path string, entriesToCheck [][]string) {
 	const getfaclPath = "/usr/bin/getfacl"
 	if _, err := os.Stat(getfaclPath); err != nil {
 		t.Skip("getfacl command not available")
 	}
 
-	cmd := exec.Command(getfaclPath, filepath.Clean(path)) // #nosec G204
+	cmd := exec.CommandContext(ctx, getfaclPath, filepath.Clean(path)) // #nosec G204
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -284,13 +284,14 @@ func verifyACLs(t *testing.T, path string, entriesToCheck [][]string) {
 }
 
 // setACLs sets ACL entries on a file using setfacl
-func setACLs(t *testing.T, path string, aclEntries []string) {
+func setACLs(ctx context.Context, t *testing.T, path string, aclEntries []string) {
 	const setfaclPath = "/usr/bin/setfacl"
 	if _, err := os.Stat(setfaclPath); err != nil {
 		t.Skip("setfacl command not available")
 	}
 
-	cmd := exec.Command(
+	cmd := exec.CommandContext(
+		ctx,
 		setfaclPath,
 		"-m",
 		strings.Join(aclEntries, ","),
@@ -515,7 +516,7 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 		"mask::rw-",
 		"other::r--",
 	}
-	setACLs(t, aclPath, aclEntries)
+	setACLs(ctx, t, aclPath, aclEntries)
 
 	entriesToCheck := [][]string{
 		{fmt.Sprintf("user:%d:rw-", uid), fmt.Sprintf("user:%s:rw-", username)},
@@ -523,7 +524,7 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 		{"mask::rw-"},
 		{"other::r--"},
 	}
-	verifyACLs(t, aclPath, entriesToCheck)
+	verifyACLs(ctx, t, aclPath, entriesToCheck)
 
 	// Check write permission using os.Access instead of unix.Access
 	_, err = os.OpenFile(aclPath, os.O_WRONLY, 0)
@@ -581,14 +582,14 @@ func testDeleteFileWithACLDenyWrite(
 		"mask::r--",
 		"other::r--",
 	}
-	setACLs(t, aclPath, aclEntries)
+	setACLs(ctx, t, aclPath, aclEntries)
 
 	entriesToCheck := [][]string{
 		{fmt.Sprintf("user:%d:r--", uid), fmt.Sprintf("user:%s:r--", username)},
 		{"mask::r--"},
 		{"other::r--"},
 	}
-	verifyACLs(t, aclPath, entriesToCheck)
+	verifyACLs(ctx, t, aclPath, entriesToCheck)
 
 	chownErr := os.Chown(aclPath, 65534, -1)
 	if chownErr != nil {
