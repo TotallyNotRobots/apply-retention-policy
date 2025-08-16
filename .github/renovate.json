@@ -14,7 +14,7 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["/^golangci\\/golangci-lint&/"],
+      "matchPackageNames": ["/^golangci\\/golangci-lint$/"],
       "groupName": "golangci-lint",
       "description": "Golangci-lint"
     }
