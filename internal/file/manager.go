@@ -128,23 +128,6 @@ func NewManager(
 	return m, nil
 }
 
-// isRegularFile checks if the file is a regular file
-func (m *Manager) isRegularFile(path string) error {
-	// Get file info
-	info, err := os.Lstat(path)
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrDeleteFile, err)
-	}
-
-	// Check if it's a regular file
-	if !info.Mode().IsRegular() {
-		return fmt.Errorf("%w: %s is not a regular file", ErrNotRegularFile, path)
-	}
-
-	// All checks passed
-	return nil
-}
-
 // DeleteFile deletes a file and logs the operation
 func (m *Manager) DeleteFile(
 	ctx context.Context,
@@ -190,6 +173,53 @@ func (m *Manager) DeleteFile(
 		zap.Int64("size", file.Size))
 
 	// Return success
+	return nil
+}
+
+// ListFiles lists all files in the directory that match the pattern
+func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
+	// Check for context cancellation first
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	var files []Info
+
+	err := filepath.WalkDir(m.directory, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		return m.processFile(ctx, path, d, &files)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrListFiles, err)
+	}
+
+	// Sort files by timestamp (newest first)
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Timestamp.After(files[j].Timestamp)
+	})
+
+	return files, nil
+}
+
+// isRegularFile checks if the file is a regular file
+func (m *Manager) isRegularFile(path string) error {
+	// Get file info
+	info, err := os.Lstat(path)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrDeleteFile, err)
+	}
+
+	// Check if it's a regular file
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("%w: %s is not a regular file", ErrNotRegularFile, path)
+	}
+
+	// All checks passed
 	return nil
 }
 
@@ -260,36 +290,6 @@ func (m *Manager) processFile(
 	})
 
 	return nil
-}
-
-// ListFiles lists all files in the directory that match the pattern
-func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
-	// Check for context cancellation first
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-	}
-
-	var files []Info
-
-	err := filepath.WalkDir(m.directory, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		return m.processFile(ctx, path, d, &files)
-	})
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrListFiles, err)
-	}
-
-	// Sort files by timestamp (newest first)
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].Timestamp.After(files[j].Timestamp)
-	})
-
-	return files, nil
 }
 
 // parseTimestamp parses the timestamp from the regex matches

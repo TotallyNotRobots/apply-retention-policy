@@ -38,11 +38,6 @@ type Logger struct {
 	*zap.Logger
 }
 
-// Error logs a message at Error level
-func (l *Logger) Error(msg string, fields ...zap.Field) {
-	l.Logger.Error(msg, fields...)
-}
-
 // New creates a new logger with the specified log level
 func New(level string) (*Logger, error) {
 	var zapLevel zapcore.Level
@@ -66,6 +61,11 @@ func New(level string) (*Logger, error) {
 func NewDefault() *Logger {
 	logger, _ := New("info")
 	return logger
+}
+
+// Error logs a message at Error level
+func (l *Logger) Error(msg string, fields ...zap.Field) {
+	l.Logger.Error(msg, fields...)
 }
 
 // With creates a child logger with the given fields
