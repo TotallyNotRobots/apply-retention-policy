@@ -37,10 +37,6 @@ import (
 )
 
 func TestPolicy_Apply(t *testing.T) {
-	// Enable test mode for logger
-	logger.SetTestMode(true)
-	defer logger.SetTestMode(false)
-
 	// Create a test logger that writes to a buffer
 	log := &logger.Logger{Logger: zap.NewNop()}
 
@@ -240,10 +236,6 @@ func TestPolicy_Apply(t *testing.T) {
 }
 
 func TestPolicy_groupFilesByPeriod(t *testing.T) {
-	// Enable test mode for logger
-	logger.SetTestMode(true)
-	defer logger.SetTestMode(false)
-
 	t.Run("basic grouping", func(t *testing.T) {
 		now := time.Date(2024, 3, 15, 12, 0, 0, 0, time.UTC)
 		files := []file.Info{

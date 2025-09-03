@@ -118,10 +118,6 @@ linters:
         linters:
           - gochecknoglobals
         text: "hourGrouper|dayGrouper|weekGrouper|monthGrouper|yearGrouper"
-      - path: pkg/logger/logger.go
-        linters:
-          - gochecknoglobals
-        text: "syncErrorOnce|isTestMode"
 
 formatters:
   enable:

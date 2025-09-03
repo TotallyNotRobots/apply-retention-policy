@@ -33,15 +33,9 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
 
 func TestPruneCommand(t *testing.T) {
-	// Enable test mode for logger
-	logger.SetTestMode(true)
-	defer logger.SetTestMode(false)
-
 	tmpDir := t.TempDir()
 	t.Chdir(tmpDir)
 
@@ -189,10 +183,6 @@ log_level: "debug"
 }
 
 func TestPruneCommandFlags(t *testing.T) {
-	// Enable test mode for logger
-	logger.SetTestMode(true)
-	defer logger.SetTestMode(false)
-
 	viper.Reset()
 	t.Run("dry run flag", func(t *testing.T) {
 		cmd := pruneCmd

@@ -43,11 +43,6 @@ import (
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
 )
 
-func init() {
-	// Enable test mode for logger in all tests
-	logger.SetTestMode(true)
-}
-
 const (
 	testBackupPattern = "backup-{year}{month}{day}{hour}{minute}.zip"
 )

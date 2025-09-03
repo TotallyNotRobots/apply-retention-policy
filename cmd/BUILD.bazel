@@ -47,7 +47,6 @@ go_test(
     srcs = ["prune_test.go"],
     embed = [":cmd"],
     deps = [
-        "//pkg/logger",
         "@com_github_spf13_viper//:viper",
         "@com_github_stretchr_testify//require",
     ],

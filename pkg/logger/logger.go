@@ -28,22 +28,10 @@ package logger
 
 import (
 	"os"
-	"sync"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
-
-var (
-	syncErrorOnce sync.Once
-	isTestMode    bool
-)
-
-// SetTestMode enables test mode for the logger
-// This should be called at the start of tests to prevent panics
-func SetTestMode(enabled bool) {
-	isTestMode = enabled
-}
 
 // Logger is a wrapper around zap.Logger
 type Logger struct {
