@@ -1,0 +1,8 @@
+repos:
+- hooks:
+  - id: commitizen
+  - id: commitizen-branch
+    stages:
+    - pre-push
+  repo: https://github.com/commitizen-tools/commitizen
+  rev: c710c9f541ae452547fdce5c360929f007ec4867  # frozen: v4.8.3

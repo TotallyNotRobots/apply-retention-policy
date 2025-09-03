@@ -1,12 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        required: true
-        type: string
-        description: "Version to release (no 'v' prefix)"
+  push:
+    tags:
+      - v*
 
 jobs:
   release:
@@ -49,10 +46,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - id: cz
+        name: Create bump and changelog
+        uses: commitizen-tools/commitizen-action@0.24.0
+        with:
+          commit: false
+          push: false
+          local_version: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          changelog_increment_filename: body.md
+
       - name: Build apply-retention-policy
         shell: bash
         run: |
-          bazel build //:release_files --define=version=v${{ inputs.version }}
+          bazel build //:release_files --define=version=v${{ steps.cz.outputs.version }}
           mkdir -p out
           ls -l
           ls -l bazel-bin/
@@ -69,16 +76,15 @@ jobs:
       - name: Build and push multi-arch image
         run: |
           bazel run //:push -- \
-            --tag=v${{ inputs.version }} \
+            --tag=v${{ steps.cz.outputs.version }} \
             --tag=latest
         shell: bash
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
         with:
-          generate_release_notes: true
-          tag_name: v${{ inputs.version }}
-          name: Release v${{ inputs.version }}
+          name: Release v${{ steps.cz.outputs.version }}
           files: out/*
+          body_path: body.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
