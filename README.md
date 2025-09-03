@@ -2,7 +2,8 @@
 
 A command-line tool to apply retention policies to backup files. It helps manage disk space by automatically deleting old backup files while maintaining a specified number of hourly, daily, weekly, monthly, and yearly backups.
 
-This project is both a useful tool that I needed and an experiment in AI-assisted development using Cursor.
+This project began as an experiment in AI-assisted development but after a lot of
+frustrations with the tools, I have gone back to my normal flow.
 
 ## Features
 
