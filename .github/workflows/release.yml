@@ -50,6 +50,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build apply-retention-policy
+        shell: bash
         run: |
           bazel build //:release_files --define=version=v${{ inputs.version }}
           mkdir -p out
