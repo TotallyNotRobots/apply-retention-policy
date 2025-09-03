@@ -40,7 +40,6 @@ linters:
     - nlreturn
     - noinlineerr
     - paralleltest
-    - perfsprint
     - tagliatelle
     - testifylint
     - testpackage

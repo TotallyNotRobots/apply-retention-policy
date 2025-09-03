@@ -28,6 +28,7 @@ THE SOFTWARE.
 package config
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -85,31 +86,31 @@ func LoadConfig(configFile string) (*Config, error) {
 // Validate checks if the configuration is valid
 func (c *Config) Validate() error {
 	if c.Retention.Hourly < 0 {
-		return fmt.Errorf("hourly retention must be non-negative")
+		return errors.New("hourly retention must be non-negative")
 	}
 
 	if c.Retention.Daily < 0 {
-		return fmt.Errorf("daily retention must be non-negative")
+		return errors.New("daily retention must be non-negative")
 	}
 
 	if c.Retention.Weekly < 0 {
-		return fmt.Errorf("weekly retention must be non-negative")
+		return errors.New("weekly retention must be non-negative")
 	}
 
 	if c.Retention.Monthly < 0 {
-		return fmt.Errorf("monthly retention must be non-negative")
+		return errors.New("monthly retention must be non-negative")
 	}
 
 	if c.Retention.Yearly < 0 {
-		return fmt.Errorf("yearly retention must be non-negative")
+		return errors.New("yearly retention must be non-negative")
 	}
 
 	if c.FilePattern == "" {
-		return fmt.Errorf("file pattern must be specified")
+		return errors.New("file pattern must be specified")
 	}
 
 	if c.Directory == "" {
-		return fmt.Errorf("directory must be specified")
+		return errors.New("directory must be specified")
 	}
 
 	return nil

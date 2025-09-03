@@ -32,6 +32,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -483,15 +484,15 @@ func testDeleteFileWithACLWrite(ctx context.Context, t *testing.T, manager *Mana
 
 	uid := os.Getuid()
 	gid := os.Getgid()
-	userObj, _ := user.LookupId(fmt.Sprintf("%d", uid))
-	groupObj, _ := user.LookupGroupId(fmt.Sprintf("%d", gid))
-	username := fmt.Sprintf("%d", uid)
+	userObj, _ := user.LookupId(strconv.Itoa(uid))
+	groupObj, _ := user.LookupGroupId(strconv.Itoa(gid))
+	username := strconv.Itoa(uid)
 
 	if userObj != nil {
 		username = userObj.Username
 	}
 
-	groupname := fmt.Sprintf("%d", gid)
+	groupname := strconv.Itoa(gid)
 
 	if groupObj != nil {
 		groupname = groupObj.Name
@@ -557,8 +558,8 @@ func testDeleteFileWithACLDenyWrite(
 	}
 
 	uid := os.Getuid()
-	userObj, _ := user.LookupId(fmt.Sprintf("%d", uid))
-	username := fmt.Sprintf("%d", uid)
+	userObj, _ := user.LookupId(strconv.Itoa(uid))
+	username := strconv.Itoa(uid)
 
 	if userObj != nil {
 		username = userObj.Username
