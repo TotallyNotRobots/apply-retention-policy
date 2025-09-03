@@ -90,21 +90,10 @@ func (l *Logger) Sync() error {
 	return l.Logger.Sync()
 }
 
-// MustSync flushes any buffered log entries,
-// and panics on any error in non-test environments
-func (l *Logger) MustSync() {
-	err := l.Logger.Sync()
-	if err != nil {
-		// Log the error only once to avoid log spam
-		syncErrorOnce.Do(func() {
-			l.Error("failed to sync logger", zap.Error(err))
-		})
-
-		// Only panic in non-test environments
-		if !isTestMode {
-			panic(err)
-		}
-	}
+// SyncQuietly flushes any buffered log entries and ignores errors
+func (l *Logger) SyncQuietly() {
+	// Ignore sync errors so we exit cleanly
+	_ = l.Logger.Sync()
 }
 
 // Fatal logs a message at Fatal level and then calls os.Exit(1)

@@ -68,7 +68,7 @@ Files that don't meet the retention policy will be deleted.`,
 		if err != nil {
 			return fmt.Errorf("failed to initialize logger: %w", err)
 		}
-		defer log.MustSync()
+		defer log.SyncQuietly()
 
 		// Initialize file manager
 		fileManager, err := file.NewManager(
