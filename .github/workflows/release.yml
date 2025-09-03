@@ -56,8 +56,8 @@ jobs:
           mkdir -p out
           cd out
 
-          cp ../bazel-bin/apply-retention-policy-*.tar.gz" .
-          cp ../bazel-bin/apply-retention-policy-*.zip" .
+          cp "../bazel-bin/apply-retention-policy-*.tar.gz" .
+          cp "../bazel-bin/apply-retention-policy-*.zip" .
 
       - name: Make checksums
         working-directory: out
