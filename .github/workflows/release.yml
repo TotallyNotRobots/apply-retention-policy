@@ -1,9 +1,12 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: "Version to release (no 'v' prefix)"
 
 jobs:
   release:
@@ -46,14 +49,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        shell: bash
-
       - name: Build apply-retention-policy
         run: |
-          bazel build //:release_files --define=version=${{ steps.get_version.outputs.VERSION }}
+          bazel build //:release_files --define=version=v${{ inputs.version }}
           mkdir -p out
           cd out
 
@@ -68,7 +66,7 @@ jobs:
       - name: Build and push multi-arch image
         run: |
           bazel run //:push -- \
-            --tag=${{ steps.get_version.outputs.VERSION }} \
+            --tag=v${{ inputs.version }} \
             --tag=latest
         shell: bash
 
@@ -76,7 +74,7 @@ jobs:
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
         with:
           generate_release_notes: true
-          name: Release ${{ steps.get_version.outputs.VERSION }}
+          name: Release v${{ inputs.version }}
           files: out/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
