@@ -55,7 +55,7 @@ jobs:
           bazel build //:release_files --define=version=v${{ inputs.version }}
           mkdir -p out
           ls -l
-          ls -l bazel-bin
+          ls -l bazel-bin/
           cd out
 
           cp "../bazel-bin/apply-retention-policy-*.tar.gz" .
