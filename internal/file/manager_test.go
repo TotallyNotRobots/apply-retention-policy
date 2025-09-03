@@ -44,7 +44,7 @@ import (
 )
 
 const (
-	testBackupPattern = "backup-{year}{month}{day}{hour}{minute}.zip"
+	testBackupPattern = "backup-{year}{month}{day}{hour}{minute}{second}.zip"
 )
 
 // setReadOnly makes a file read-only in a platform-independent way
@@ -68,7 +68,7 @@ func TestNewManager(t *testing.T) {
 
 		m, err := NewManager(
 			"/tmp",
-			"backup-{year}-{month}-{day}-{hour}-{minute}.tar.gz",
+			"backup-{year}-{month}-{day}-{hour}-{minute}-{second}.tar.gz",
 			WithLogger(log),
 		)
 
@@ -115,9 +115,9 @@ func TestListFiles(t *testing.T) {
 
 	// Create test files
 	names := []string{
-		"backup-202501010000.zip",
-		"backup-202501020000.zip",
-		"backup-202501030000.zip",
+		"backup-20250101000001.zip",
+		"backup-20250102000001.zip",
+		"backup-20250103000001.zip",
 	}
 
 	for _, file := range names {
@@ -767,95 +767,101 @@ func TestParseTimestamp(t *testing.T) {
 		{
 			name: "valid case",
 			matches: []string{
-				"backup-202501010000.zip",
+				"backup-20250102030405.zip",
 				"2025",
 				"01",
-				"01",
-				"00",
-				"00",
+				"02",
+				"03",
+				"04",
+				"05",
 			},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
-			expected:   time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
+			expected:   time.Date(2025, 1, 2, 3, 4, 5, 0, time.UTC),
 			expectErr:  false,
 		},
 		{
 			name: "missing year",
 			matches: []string{
-				"backup--01010000.zip",
+				"backup--0101000000.zip",
 				"",
 				"01",
 				"01",
 				"00",
 				"00",
+				"00",
 			},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
 			expectErr:  true,
 		},
 		{
 			name: "invalid month",
 			matches: []string{
-				"backup-202513010000.zip",
+				"backup-20251301000000.zip",
 				"2025",
 				"13",
 				"01",
 				"00",
 				"00",
+				"00",
 			},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
 			expectErr:  true,
 		},
 		{
 			name: "invalid day",
 			matches: []string{
-				"backup-202501320000.zip",
+				"backup-20250132000000.zip",
 				"2025",
 				"01",
 				"32",
 				"00",
 				"00",
+				"00",
 			},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
 			expectErr:  true,
 		},
 		{
 			name: "invalid hour",
 			matches: []string{
-				"backup-202501012500.zip",
+				"backup-20250101250000.zip",
 				"2025",
 				"01",
 				"01",
 				"25",
 				"00",
+				"00",
 			},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
 			expectErr:  true,
 		},
 		{
 			name: "invalid minute",
 			matches: []string{
-				"backup-202501010060.zip",
+				"backup-20250101006000.zip",
 				"2025",
 				"01",
 				"01",
 				"00",
 				"60",
+				"00",
 			},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
 			expectErr:  true,
 		},
 		{
 			name:       "missing matches",
-			matches:    []string{"backup-202501010000.zip"},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
+			matches:    []string{"backup-20250101000000.zip"},
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
 			expectErr:  true,
 		},
 		{
 			name: "extra fields in matches",
 			matches: []string{
-				"backup-202501010000.zip",
-				"2025", "01", "01", "00", "00", "extra",
+				"backup-20250101000000.zip",
+				"2025", "01", "01", "00", "00", "00", "extra",
 			},
-			fieldNames: []string{"", "year", "month", "day", "hour", "minute"},
+			fieldNames: []string{"", "year", "month", "day", "hour", "minute", "second"},
 			expectErr:  true,
 		},
 	}

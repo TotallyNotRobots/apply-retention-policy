@@ -99,6 +99,11 @@ func NewManager(
 		"{minute}",
 		`(?P<minute>\d{2})`,
 	)
+	regexPattern = strings.ReplaceAll(
+		regexPattern,
+		"{second}",
+		`(?P<second>\d{2})`,
+	)
 	regexPattern = "^" + regexPattern + "$"
 
 	compiledPattern, err := regexp.Compile(regexPattern)
@@ -308,6 +313,7 @@ func (m *Manager) parseTimestamp(
 		"day":    "01",
 		"hour":   "00",
 		"minute": "00",
+		"second": "00",
 	}
 
 	// Fill values from matches
@@ -321,16 +327,17 @@ func (m *Manager) parseTimestamp(
 
 	// Format timestamp string
 	timestampStr := fmt.Sprintf(
-		"%s-%s-%s-%s-%s",
+		"%s-%s-%s-%s-%s-%s",
 		parts["year"],
 		parts["month"],
 		parts["day"],
 		parts["hour"],
 		parts["minute"],
+		parts["second"],
 	)
 
 	// Parse the timestamp
-	timestamp, err := time.Parse("2006-01-02-15-04", timestampStr)
+	timestamp, err := time.Parse("2006-01-02-15-04-05", timestampStr)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("%w: %w", ErrParseTimestamp, err)
 	}
