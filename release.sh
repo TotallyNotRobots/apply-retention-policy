@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
 changelog_file="$(mktemp)"
 cz bump --changelog-to-stdout > "$changelog_file"
 
