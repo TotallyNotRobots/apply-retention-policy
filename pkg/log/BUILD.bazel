@@ -23,9 +23,9 @@
 load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "logger",
+    name = "log",
     srcs = ["logger.go"],
-    importpath = "github.com/TotallyNotRobots/apply-retention-policy/pkg/logger",
+    importpath = "github.com/TotallyNotRobots/apply-retention-policy/pkg/log",
     visibility = ["//visibility:public"],
     deps = [
         "@org_uber_go_zap//:zap",

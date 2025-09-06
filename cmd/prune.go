@@ -38,7 +38,7 @@ import (
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/retention"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/must"
 )
 
@@ -64,7 +64,7 @@ Files that don't meet the retention policy will be deleted.`,
 		}
 
 		// Initialize logger
-		log, err := logger.New(cfg.LogLevel)
+		log, err := log.New(cfg.LogLevel)
 		if err != nil {
 			return fmt.Errorf("failed to initialize logger: %w", err)
 		}

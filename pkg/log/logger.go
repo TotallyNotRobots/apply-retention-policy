@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package logger provides logging functionality for the application.
+// Package log provides logging functionality for the application.
 // It implements a structured logging interface using zap.
-package logger
+package log
 
 import (
 	"os"

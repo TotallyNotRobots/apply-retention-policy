@@ -30,7 +30,7 @@ go_library(
     deps = [
         "//internal/config",
         "//internal/file",
-        "//pkg/logger",
+        "//pkg/log",
         "@org_uber_go_zap//:zap",
     ],
 )
@@ -43,7 +43,7 @@ go_test(
     deps = [
         "//internal/config",
         "//internal/file",
-        "//pkg/logger",
+        "//pkg/log",
         "@com_github_stretchr_testify//require",
         "@org_uber_go_zap//:zap",
     ],
