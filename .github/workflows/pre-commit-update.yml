@@ -16,9 +16,10 @@ jobs:
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6
         with:
           python-version: '3.13'
+          cache: "pip"
 
-      - name: Install Hatch
-        run: pip install --upgrade hatch
+      - name: Install pre-commit
+        run: pip install --upgrade pre-commit
 
       - name: Set up Git user
         run: |
@@ -26,7 +27,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Update .pre-commit-config.yaml
-        run: hatch run pre-commit autoupdate --freeze
+        run: pre-commit autoupdate --freeze
 
       - name: Check for changes
         id: changes
