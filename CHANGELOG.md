@@ -1,3 +1,13 @@
+## v0.4.0 (2025-09-06)
+
+### Feat
+
+- add more debug logging to help narrow down issues
+
+### Fix
+
+- **deps**: update module github.com/spf13/cobra to v1.10.1
+
 ## v0.3.0 (2025-09-03)
 
 ### Feat
