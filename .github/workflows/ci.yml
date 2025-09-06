@@ -36,11 +36,12 @@ jobs:
 
       - run: |
           bazel run @rules_go//go -- tool fix -diff -go=go${{ steps.setup-go.outputs.go-version }}
-          bazel run @rules_go//go -- \
-            run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest \
-            -test -fix -diff
-
           bazel run //:gazelle -- fix -mode=diff
+
+      - run: >
+          bazel run @rules_go//go --
+            run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest
+            -test -fix -diff
 
       - name: Check lockfiles
         run: |
