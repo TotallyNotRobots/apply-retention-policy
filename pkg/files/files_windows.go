@@ -1,5 +1,4 @@
 //go:build windows
-// +build windows
 
 /*
 The MIT License (MIT)
