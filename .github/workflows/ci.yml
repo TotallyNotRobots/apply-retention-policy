@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
@@ -36,12 +36,21 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
-      - run: bazel run @rules_go//go -- tool fix -diff -go=go${{ steps.setup-go.outputs.go-version }} .
-      - run: bazel run //:gazelle -- fix -mode=diff
-      - run: bazel run @rules_go//go -- run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -fix -diff .
-      - run: bazel mod deps --lockfile_mode=error
-      - run: bazel mod tidy --lockfile_mode=error
-      - run: bazel run @rules_go//go -- mod tidy -diff
+      - run: |
+          set -e
+          bazel run @rules_go//go -- tool fix -go=go${{ steps.setup-go.outputs.go-version }} -force true .
+          git diff --exit-code
+          bazel run //:gazelle -- fix
+          git diff --exit-code
+          bazel run @rules_go//go -- run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -fix .
+          git diff --exit-code
+          bazel mod deps
+          git diff --exit-code
+          bazel mod tidy
+          git diff --exit-code
+          bazel run @rules_go//go -- mod tidy
+          git diff --exit-code
+        shell: bash
 
   test:
     name: Test (${{ matrix.os }})
