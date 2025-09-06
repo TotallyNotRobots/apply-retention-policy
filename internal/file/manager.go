@@ -41,7 +41,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
 )
 
 // Common errors
@@ -66,13 +66,13 @@ type ManagerOption func(*Manager)
 
 // Manager handles file operations for the retention policy
 type Manager struct {
-	logger      *logger.Logger
+	logger      *log.Logger
 	directory   string
 	filePattern *regexp.Regexp
 }
 
 // WithLogger sets the logger for the Manager
-func WithLogger(logger *logger.Logger) ManagerOption {
+func WithLogger(logger *log.Logger) ManagerOption {
 	return func(m *Manager) {
 		m.logger = logger
 	}
@@ -113,7 +113,7 @@ func NewManager(
 
 	// Create manager with default values
 	m := &Manager{
-		logger: &logger.Logger{
+		logger: &log.Logger{
 			Logger: zap.NewNop(),
 		}, // Default no-op logger
 		directory:   directory,

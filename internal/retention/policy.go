@@ -35,20 +35,20 @@ import (
 
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
 )
 
 // Policy implements the retention policy logic
 type Policy struct {
-	logger *logger.Logger
+	logger *log.Logger
 	config *config.Config
 }
 
 // NewPolicy creates a new retention policy
-func NewPolicy(logger *logger.Logger, config *config.Config) *Policy {
+func NewPolicy(logger *log.Logger, conf *config.Config) *Policy {
 	return &Policy{
 		logger: logger,
-		config: config,
+		config: conf,
 	}
 }
 
@@ -130,53 +130,53 @@ func (p *Policy) Apply(files []file.Info) ([]file.Info, error) {
 	var toDelete []file.Info
 
 	// Group files by time period
-	hourlyFiles, pruned, files := groupFilesByPeriod(
+	hourlyFiles := groupFilesByPeriod(
 		files,
 		hourGrouper,
 		p.config.Retention.Hourly,
 	)
-	toDelete = append(toDelete, pruned...)
+	toDelete = append(toDelete, hourlyFiles.toDelete...)
 
-	dailyFiles, pruned, files := groupFilesByPeriod(
-		files,
+	dailyFiles := groupFilesByPeriod(
+		hourlyFiles.unselected,
 		dayGrouper,
 		p.config.Retention.Daily,
 	)
-	toDelete = append(toDelete, pruned...)
+	toDelete = append(toDelete, dailyFiles.toDelete...)
 
-	weeklyFiles, pruned, files := groupFilesByPeriod(
-		files,
+	weeklyFiles := groupFilesByPeriod(
+		dailyFiles.unselected,
 		weekGrouper,
 		p.config.Retention.Weekly,
 	)
-	toDelete = append(toDelete, pruned...)
+	toDelete = append(toDelete, weeklyFiles.toDelete...)
 
-	monthlyFiles, pruned, files := groupFilesByPeriod(
-		files,
+	monthlyFiles := groupFilesByPeriod(
+		weeklyFiles.unselected,
 		monthGrouper,
 		p.config.Retention.Monthly,
 	)
-	toDelete = append(toDelete, pruned...)
+	toDelete = append(toDelete, monthlyFiles.toDelete...)
 
-	yearlyFiles, pruned, files := groupFilesByPeriod(
-		files,
+	yearlyFiles := groupFilesByPeriod(
+		monthlyFiles.unselected,
 		yearGrouper,
 		p.config.Retention.Yearly,
 	)
-	toDelete = append(toDelete, pruned...)
+	toDelete = append(toDelete, yearlyFiles.toDelete...)
 
 	// All extra files should be pruned
-	toDelete = append(toDelete, files...)
+	toDelete = append(toDelete, yearlyFiles.unselected...)
 
 	// Log summary
 	p.logger.Info("retention policy summary",
 		zap.Int("total_files", len(files)),
 		zap.Int("files_to_delete", len(toDelete)),
-		zap.Int("hourly_retained", len(hourlyFiles)),
-		zap.Int("daily_retained", len(dailyFiles)),
-		zap.Int("weekly_retained", len(weeklyFiles)),
-		zap.Int("monthly_retained", len(monthlyFiles)),
-		zap.Int("yearly_retained", len(yearlyFiles)))
+		zap.Int("hourly_retained", len(hourlyFiles.selected)),
+		zap.Int("daily_retained", len(dailyFiles.selected)),
+		zap.Int("weekly_retained", len(weeklyFiles.selected)),
+		zap.Int("monthly_retained", len(monthlyFiles.selected)),
+		zap.Int("yearly_retained", len(yearlyFiles.selected)))
 
 	return toDelete, nil
 }
@@ -193,6 +193,7 @@ func groupFilesByTimePeriod[T comparable](
 
 	currentGroup := []file.Info{}
 
+	files = slices.Clone(files)
 	slices.SortFunc(files, func(a, b file.Info) int {
 		return b.Timestamp.Compare(a.Timestamp)
 	})
@@ -221,12 +222,18 @@ func groupFilesByTimePeriod[T comparable](
 	return groups
 }
 
+type groupResult struct {
+	selected   []file.Info
+	toDelete   []file.Info
+	unselected []file.Info
+}
+
 // groupFilesByPeriod groups files by the specified time period
 func groupFilesByPeriod[T comparable](
 	files []file.Info,
 	grouper func(file.Info) T,
 	keepCount int,
-) ([]file.Info, []file.Info, []file.Info) {
+) *groupResult {
 	groups := groupFilesByTimePeriod(files, grouper)
 
 	selected := []file.Info{}
@@ -245,5 +252,9 @@ func groupFilesByPeriod[T comparable](
 		}
 	}
 
-	return selected, toDelete, unselected
+	return &groupResult{
+		selected:   selected,
+		toDelete:   toDelete,
+		unselected: unselected,
+	}
 }

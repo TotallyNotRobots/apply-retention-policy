@@ -58,7 +58,7 @@ linters:
         # - experimental
         # - opinionated
         - performance
-        # - style
+        - style
     gocyclo:
       min-complexity: 10
     govet:

@@ -34,7 +34,7 @@ go_library(
         "//internal/config",
         "//internal/file",
         "//internal/retention",
-        "//pkg/logger",
+        "//pkg/log",
         "//pkg/must",
         "@com_github_spf13_cobra//:cobra",
         "@com_github_spf13_viper//:viper",

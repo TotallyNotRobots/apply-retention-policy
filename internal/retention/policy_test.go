@@ -33,12 +33,12 @@ import (
 
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logger"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
 )
 
 func TestPolicy_Apply(t *testing.T) {
 	// Create a test logger that writes to a buffer
-	log := &logger.Logger{Logger: zap.NewNop()}
+	logger := &log.Logger{Logger: zap.NewNop()}
 
 	// Create a test config
 	cfg := &config.Config{
@@ -52,7 +52,7 @@ func TestPolicy_Apply(t *testing.T) {
 	}
 
 	// Create test policy
-	policy := NewPolicy(log, cfg)
+	policy := NewPolicy(logger, cfg)
 
 	t.Run("empty file list", func(t *testing.T) {
 		toDelete, err := policy.Apply([]file.Info{})
@@ -245,31 +245,31 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 			{Path: "file4", Timestamp: now.Add(-120 * time.Minute)},
 		}
 
-		selected, toDelete, unselected := groupFilesByPeriod(
+		selected := groupFilesByPeriod(
 			files,
 			hourGrouper,
 			2,
 		)
 
-		require.Len(t, selected, 2)
-		require.Empty(t, toDelete)
-		require.Len(t, unselected, 2)
+		require.Len(t, selected.selected, 2)
+		require.Empty(t, selected.toDelete)
+		require.Len(t, selected.unselected, 2)
 
-		require.Equal(t, "file1", selected[0].Path)
-		require.Equal(t, "file2", selected[1].Path)
-		require.Equal(t, "file3", unselected[0].Path)
-		require.Equal(t, "file4", unselected[1].Path)
+		require.Equal(t, "file1", selected.selected[0].Path)
+		require.Equal(t, "file2", selected.selected[1].Path)
+		require.Equal(t, "file3", selected.unselected[0].Path)
+		require.Equal(t, "file4", selected.unselected[1].Path)
 	})
 
 	t.Run("empty input", func(t *testing.T) {
-		selected, toDelete, unselected := groupFilesByPeriod(
+		selected := groupFilesByPeriod(
 			[]file.Info{},
 			hourGrouper,
 			2,
 		)
-		require.Empty(t, selected)
-		require.Empty(t, toDelete)
-		require.Empty(t, unselected)
+		require.Empty(t, selected.selected)
+		require.Empty(t, selected.toDelete)
+		require.Empty(t, selected.unselected)
 	})
 
 	t.Run("keep all files", func(t *testing.T) {
@@ -279,15 +279,15 @@ func TestPolicy_groupFilesByPeriod(t *testing.T) {
 			{Path: "file2", Timestamp: now.Add(-60 * time.Minute)},
 		}
 
-		selected, toDelete, unselected := groupFilesByPeriod(
+		selected := groupFilesByPeriod(
 			files,
 			hourGrouper,
 			2,
 		)
 
-		require.Len(t, selected, 2)
-		require.Empty(t, toDelete)
-		require.Empty(t, unselected)
+		require.Len(t, selected.selected, 2)
+		require.Empty(t, selected.toDelete)
+		require.Empty(t, selected.unselected)
 	})
 }
 
