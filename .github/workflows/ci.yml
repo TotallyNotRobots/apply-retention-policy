@@ -41,7 +41,8 @@ jobs:
       - run: >
           bazel run @rules_go//go --
             run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest
-            -test -fix -diff
+            -test -fix -diff .
+        shell: bash
 
       - name: Check lockfiles
         run: |
