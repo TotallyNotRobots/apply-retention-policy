@@ -239,6 +239,9 @@ func (m *Manager) processFile(
 
 	// Skip directories and symlinks
 	if d.IsDir() || d.Type()&os.ModeSymlink != 0 {
+		m.logger.Debug("ignoring dir or symlink",
+			zap.String("file", path))
+
 		return nil
 	}
 
@@ -251,6 +254,9 @@ func (m *Manager) processFile(
 	// Check if the file matches our pattern
 	matches := m.filePattern.FindStringSubmatch(relPath)
 	if matches == nil {
+		m.logger.Debug("file not matched",
+			zap.String("file", relPath))
+
 		return nil
 	}
 
