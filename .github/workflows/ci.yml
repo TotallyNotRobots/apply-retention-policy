@@ -36,21 +36,13 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
-      - run: |
-          bazel run @rules_go//go -- tool fix -diff -go=go${{ steps.setup-go.outputs.go-version }} .
-          bazel run //:gazelle -- fix -mode=diff
-
-      - run: |
-          bazel run @rules_go//go -- \
-            run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest \
-            -test -fix -diff .
-        shell: bash
-
-      - name: Check lockfiles
-        run: |
-          bazel mod deps --lockfile_mode=error
-          bazel mod tidy --lockfile_mode=error
-          bazel run @rules_go//go -- mod tidy -diff
+      - run: bazel run @rules_go//go -- tool fix -diff -go=go${{ steps.setup-go.outputs.go-version }} .
+      - run: bazel run //:gazelle -- fix -mode=diff
+      - run: bazel run @rules_go//go -- run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -help
+      - run: bazel run @rules_go//go -- run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -fix -diff .
+      - run: bazel mod deps --lockfile_mode=error
+      - run: bazel mod tidy --lockfile_mode=error
+      - run: bazel run @rules_go//go -- mod tidy -diff
 
   test:
     name: Test (${{ matrix.os }})
@@ -76,6 +68,7 @@ jobs:
 
       - name: Run tests (${{ runner.os }})
         run: |
+          set -e
           if [ "${{ runner.os }}" = "Windows" ]; then
             bazel test //...
           else

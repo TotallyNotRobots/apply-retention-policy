@@ -47,6 +47,7 @@ jobs:
       - name: Build apply-retention-policy
         shell: bash
         run: |
+          set -e
           bazel build //:release_files --define=version=${{ steps.get_version.outputs.version }}
           mkdir -p out
           ls -l
