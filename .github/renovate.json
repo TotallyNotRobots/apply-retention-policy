@@ -12,7 +12,6 @@
     "docker:pinDigests",
     "helpers:pinGitHubActionDigests"
   ],
-  "prCreation": "not-pending",
   "packageRules": [
     {
       "matchPackageNames": ["/^golangci\\/golangci-lint$/"],
