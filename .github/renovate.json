@@ -12,17 +12,40 @@
     "docker:pinDigests",
     "helpers:pinGitHubActionDigests"
   ],
+  "prCreation": "not-pending",
   "packageRules": [
     {
       "matchPackageNames": ["/^golangci\\/golangci-lint$/"],
       "groupName": "golangci-lint",
       "description": "Golangci-lint"
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "matchDepTypes": ["golang"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "enabled": true
     }
   ],
+  "gomod": {
+    "managerFilePatterns": [
+      "/(^|/)go\\.mod$/",
+      "/(^|/)go\\.sum$/"
+    ],
+    "pinDigests": false,
+    "postUpdateOptions": [
+      "gomodTidy",
+      "gomodUpdateImportPaths"
+    ]
+  },
   "bazel": {
     "enabled": true,
     "managerFilePatterns": [
-      "/^MODULE\\.bazel$/"
+      "/(^|/)MODULE\\.bazel(\\.lock)?$/"
     ]
   }
 }
