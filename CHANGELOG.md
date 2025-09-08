@@ -1,3 +1,14 @@
+## v0.4.1 (2025-09-08)
+
+### Fix
+
+- **deps**: update module golang.org/x/sys to v0.36.0
+
+### Refactor
+
+- **lint**: apply gocritic style checks
+- remove old build tags
+
 ## v0.4.0 (2025-09-06)
 
 ### Feat
