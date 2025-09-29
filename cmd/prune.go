@@ -22,9 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package cmd implements the command-line interface for the retention policy
-// tool. It provides commands for managing and applying retention policies to
-// backup files.
 package cmd
 
 import (

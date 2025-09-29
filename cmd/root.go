@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 
 // Package cmd implements the command-line interface for the retention policy
-// tool.
-// It provides the root command and common functionality for all subcommands.
+// tool. It provides commands for managing and applying retention policies to
+// backup files.
 package cmd
 
 import (
