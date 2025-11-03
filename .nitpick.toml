@@ -1,0 +1,4 @@
+[tool.nitpick]
+style = [
+    "gh://TotallyNotRobots/nitpick/common.toml",
+]

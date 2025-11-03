@@ -1,12 +1,41 @@
 repos:
-- hooks:
-  - id: commitizen
-  - id: commitizen-branch
-    stages:
-    - pre-push
-  repo: https://github.com/commitizen-tools/commitizen
-  rev: cc981fcb065527b6de0033b0cbf0432e69781901  # frozen: v4.9.1
-minimum_pre_commit_version: 2.18.0
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: cc981fcb065527b6de0033b0cbf0432e69781901 # frozen: v4.9.1
+    hooks:
+      - id: commitizen
+      - id: commitizen-branch
+        stages:
+          - pre-push
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: '3e8a8703264a2f4a69428a0aa4dcb512790b2c8c'  # frozen: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args:
+          - --markdown-linebreak-ext=md,markdown
+  - repo: https://github.com/andreoliwa/nitpick
+    rev: 'a1373f03f5a9394c75cc03e5da1b0cb6ff615dbb'  # frozen: v0.38.0
+    hooks:
+      - id: nitpick
+  - repo: https://github.com/codespell-project/codespell
+    rev: '63c8f8312b7559622c0d82815639671ae42132ac'  # frozen: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - tomli ; python_version < '3.11'
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: '19b28a9f0a0102b30776f054bea4176e7af50dbe'  # frozen: v2.15.0
+    hooks:
+      - id: pretty-format-toml
+        args:
+          - --autofix
+          - --no-sort
+          - --trailing-commas
+          - --indent
+          - '4'
+          - --inline-comment-spaces
+          - '1'
+minimum_pre_commit_version: 4.3.0
 default_install_hook_types:
   - pre-commit
   - pre-push
