@@ -30,6 +30,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"slices"
 	"syscall"
 
 	"golang.org/x/sys/unix"
@@ -80,13 +81,7 @@ func (p *LinuxPlatform) CheckACLSupport() (bool, error) {
 		return false, err
 	}
 
-	for _, fsType := range p.GetSupportedFsTypes() {
-		if stat.Type == fsType {
-			return true, nil
-		}
-	}
-
-	return false, nil
+	return slices.Contains(p.GetSupportedFsTypes(), stat.Type), nil
 }
 
 // CheckSymlinkSupport implements Platform.CheckSymlinkSupport for Linux systems

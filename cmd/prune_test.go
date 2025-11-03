@@ -92,6 +92,7 @@ log_level: "debug"
 	// Set up viper for all tests
 	viper.Reset()
 	viper.SetConfigFile(configFile)
+
 	err = viper.ReadInConfig()
 	require.NoError(t, err)
 
@@ -166,6 +167,7 @@ log_level: "debug"
 	t.Run("context cancellation", func(t *testing.T) {
 		viper.Reset()
 		viper.SetConfigFile(configFile)
+
 		err := viper.ReadInConfig()
 		require.NoError(t, err)
 
