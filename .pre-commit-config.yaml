@@ -5,7 +5,7 @@ repos:
     stages:
     - pre-push
   repo: https://github.com/commitizen-tools/commitizen
-  rev: c710c9f541ae452547fdce5c360929f007ec4867  # frozen: v4.8.3
+  rev: cc981fcb065527b6de0033b0cbf0432e69781901  # frozen: v4.9.1
 minimum_pre_commit_version: 2.18.0
 default_install_hook_types:
   - pre-commit
