@@ -98,7 +98,7 @@ use_repo(go_deps, "com_github_spf13_cobra", "com_github_spf13_viper", "com_githu
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
     name = "distroless_base",
-    digest = "sha256:f5a3067027c2b322cd71b844f3d84ad3deada45ceb8a30f301260a602455070e",
+    digest = "sha256:c83f022002fc917a92501a8c30c605efdad3010157ba2c8998a2cbf213299201",
     image = "gcr.io/distroless/base",
     platforms = [
         "linux/amd64",
