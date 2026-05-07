@@ -1,6 +1,6 @@
 module github.com/TotallyNotRobots/apply-retention-policy
 
-go 1.25.9
+go 1.25.10
 
 require (
 	github.com/spf13/cobra v1.10.2
