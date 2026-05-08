@@ -39,11 +39,11 @@ jobs:
 
       - run: |
           set -e
-          bazel run @rules_go//go -- tool fix -go=go${{ steps.setup-go.outputs.go-version }} -force true .
+          bazel run @rules_go//go -- fix ./...
           git diff --exit-code
           bazel run //:gazelle -- fix
           git diff --exit-code
-          bazel run @rules_go//go -- run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -fix .
+          bazel run @rules_go//go -- run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -fix ./...
           git diff --exit-code
           bazel mod deps
           git diff --exit-code
