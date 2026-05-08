@@ -35,17 +35,17 @@ import (
 
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logging"
 )
 
 // Policy implements the retention policy logic
 type Policy struct {
-	logger *log.Logger
+	logger *logging.Logger
 	config *config.Config
 }
 
 // NewPolicy creates a new retention policy
-func NewPolicy(logger *log.Logger, conf *config.Config) *Policy {
+func NewPolicy(logger *logging.Logger, conf *config.Config) *Policy {
 	return &Policy{
 		logger: logger,
 		config: conf,
@@ -127,46 +127,45 @@ func (p *Policy) Apply(files []file.Info) ([]file.Info, error) {
 		return nil, nil
 	}
 
-	var toDelete []file.Info
-
 	// Group files by time period
 	hourlyFiles := groupFilesByPeriod(
 		files,
 		hourGrouper,
 		p.config.Retention.Hourly,
 	)
-	toDelete = append(toDelete, hourlyFiles.toDelete...)
 
 	dailyFiles := groupFilesByPeriod(
 		hourlyFiles.unselected,
 		dayGrouper,
 		p.config.Retention.Daily,
 	)
-	toDelete = append(toDelete, dailyFiles.toDelete...)
 
 	weeklyFiles := groupFilesByPeriod(
 		dailyFiles.unselected,
 		weekGrouper,
 		p.config.Retention.Weekly,
 	)
-	toDelete = append(toDelete, weeklyFiles.toDelete...)
 
 	monthlyFiles := groupFilesByPeriod(
 		weeklyFiles.unselected,
 		monthGrouper,
 		p.config.Retention.Monthly,
 	)
-	toDelete = append(toDelete, monthlyFiles.toDelete...)
 
 	yearlyFiles := groupFilesByPeriod(
 		monthlyFiles.unselected,
 		yearGrouper,
 		p.config.Retention.Yearly,
 	)
-	toDelete = append(toDelete, yearlyFiles.toDelete...)
 
-	// All extra files should be pruned
-	toDelete = append(toDelete, yearlyFiles.unselected...)
+	toDelete := slices.Concat(
+		hourlyFiles.toDelete,
+		dailyFiles.toDelete,
+		weeklyFiles.toDelete,
+		monthlyFiles.toDelete,
+		yearlyFiles.toDelete,
+		yearlyFiles.unselected,
+	)
 
 	// Log summary
 	p.logger.Info("retention policy summary",

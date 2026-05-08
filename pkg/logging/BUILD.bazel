@@ -32,3 +32,14 @@ go_library(
         "@org_uber_go_zap//zapcore",
     ],
 )
+
+go_library(
+    name = "logging",
+    srcs = ["logger.go"],
+    importpath = "github.com/TotallyNotRobots/apply-retention-policy/pkg/logging",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@org_uber_go_zap//:zap",
+        "@org_uber_go_zap//zapcore",
+    ],
+)

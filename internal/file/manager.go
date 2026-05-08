@@ -35,13 +35,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
 	"go.uber.org/zap"
 
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logging"
 )
 
 // Common errors
@@ -66,13 +65,13 @@ type ManagerOption func(*Manager)
 
 // Manager handles file operations for the retention policy
 type Manager struct {
-	logger      *log.Logger
+	logger      *logging.Logger
 	directory   string
 	filePattern *regexp.Regexp
 }
 
 // WithLogger sets the logger for the Manager
-func WithLogger(logger *log.Logger) ManagerOption {
+func WithLogger(logger *logging.Logger) ManagerOption {
 	return func(m *Manager) {
 		m.logger = logger
 	}
@@ -113,7 +112,7 @@ func NewManager(
 
 	// Create manager with default values
 	m := &Manager{
-		logger: &log.Logger{
+		logger: &logging.Logger{
 			Logger: zap.NewNop(),
 		}, // Default no-op logger
 		directory:   directory,
@@ -199,8 +198,8 @@ func (m *Manager) ListFiles(ctx context.Context) ([]Info, error) {
 	}
 
 	// Sort files by timestamp (newest first)
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].Timestamp.After(files[j].Timestamp)
+	slices.SortFunc(files, func(a, b Info) int {
+		return a.Timestamp.Compare(b.Timestamp)
 	})
 
 	return files, nil
