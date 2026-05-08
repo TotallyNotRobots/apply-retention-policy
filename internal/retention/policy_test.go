@@ -33,12 +33,12 @@ import (
 
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/config"
 	"github.com/TotallyNotRobots/apply-retention-policy/internal/file"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logging"
 )
 
 func TestPolicy_Apply(t *testing.T) {
 	// Create a test logger that writes to a buffer
-	logger := &log.Logger{Logger: zap.NewNop()}
+	logger := &logging.Logger{Logger: zap.NewNop()}
 
 	// Create a test config
 	cfg := &config.Config{

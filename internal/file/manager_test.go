@@ -41,7 +41,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/TotallyNotRobots/apply-retention-policy/pkg/files"
-	"github.com/TotallyNotRobots/apply-retention-policy/pkg/log"
+	"github.com/TotallyNotRobots/apply-retention-policy/pkg/logging"
 )
 
 const (
@@ -65,7 +65,7 @@ func removeReadOnly(ctx context.Context, t *testing.T, path string) {
 func TestNewManager(t *testing.T) {
 	t.Run("valid pattern", func(t *testing.T) {
 		// Use a no-op logger for testing
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 
 		m, err := NewManager(
 			"/tmp",
@@ -87,7 +87,7 @@ func TestNewManager(t *testing.T) {
 
 	t.Run("with logger option", func(t *testing.T) {
 		// Use a no-op logger for testing
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 
 		m, err := NewManager(
 			"/tmp",
@@ -108,7 +108,7 @@ func TestListFiles(t *testing.T) {
 	t.Parallel()
 	// Setup
 	ctx := t.Context()
-	logger := &log.Logger{Logger: zap.NewNop()}
+	logger := &logging.Logger{Logger: zap.NewNop()}
 	dir := t.TempDir()
 
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
@@ -640,7 +640,7 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("delete regular file", func(t *testing.T) {
 		ctx := t.Context()
 		dir := t.TempDir()
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 		require.NoError(t, err)
 		path, info := setupTestFile(t, dir, "backup-202501010000.zip")
@@ -649,7 +649,7 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("delete non-existent file", func(t *testing.T) {
 		ctx := t.Context()
 		dir := t.TempDir()
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 		require.NoError(t, err)
 		testDeleteNonExistentFile(ctx, t, manager, dir)
@@ -657,7 +657,7 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("delete directory", func(t *testing.T) {
 		ctx := t.Context()
 		dir := t.TempDir()
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 		require.NoError(t, err)
 		testDeleteDirectory(ctx, t, manager, dir)
@@ -665,7 +665,7 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("delete file with other write permission", func(t *testing.T) {
 		ctx := t.Context()
 		dir := t.TempDir()
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 		require.NoError(t, err)
 		testDeleteFileWithOtherWrite(ctx, t, manager, dir)
@@ -673,7 +673,7 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("context cancellation", func(t *testing.T) {
 		ctx := t.Context()
 		dir := t.TempDir()
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 		require.NoError(t, err)
 		_, info := setupTestFile(t, dir, "backup-202501010000.zip")
@@ -682,7 +682,7 @@ func TestDeleteFile(t *testing.T) {
 	t.Run("dry run", func(t *testing.T) {
 		ctx := t.Context()
 		dir := t.TempDir()
-		logger := &log.Logger{Logger: zap.NewNop()}
+		logger := &logging.Logger{Logger: zap.NewNop()}
 		manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 		require.NoError(t, err)
 		path, info := setupTestFile(t, dir, "backup-202501010000.zip")
@@ -697,7 +697,7 @@ func TestDeleteFile(t *testing.T) {
 		t.Run("delete symlink", func(t *testing.T) {
 			ctx := t.Context()
 			dir := t.TempDir()
-			logger := &log.Logger{Logger: zap.NewNop()}
+			logger := &logging.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 			require.NoError(t, err)
 			testDeleteSymlink(ctx, t, manager, dir)
@@ -709,7 +709,7 @@ func TestDeleteFile(t *testing.T) {
 		t.Run("delete file with ACL write permission", func(t *testing.T) {
 			ctx := t.Context()
 			dir := t.TempDir()
-			logger := &log.Logger{Logger: zap.NewNop()}
+			logger := &logging.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 			require.NoError(t, err)
 			testDeleteFileWithACLWrite(ctx, t, manager, dir)
@@ -717,7 +717,7 @@ func TestDeleteFile(t *testing.T) {
 		t.Run("delete file with ACL deny write", func(t *testing.T) {
 			ctx := t.Context()
 			dir := t.TempDir()
-			logger := &log.Logger{Logger: zap.NewNop()}
+			logger := &logging.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 			require.NoError(t, err)
 			testDeleteFileWithACLDenyWrite(ctx, t, manager, dir)
@@ -729,7 +729,7 @@ func TestDeleteFile(t *testing.T) {
 		t.Run("delete file with group write permission", func(t *testing.T) {
 			ctx := t.Context()
 			dir := t.TempDir()
-			logger := &log.Logger{Logger: zap.NewNop()}
+			logger := &logging.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 			require.NoError(t, err)
 			testDeleteFileWithGroupWrite(ctx, t, manager, dir)
@@ -741,7 +741,7 @@ func TestDeleteFile(t *testing.T) {
 		t.Run("delete read-only file", func(t *testing.T) {
 			ctx := t.Context()
 			dir := t.TempDir()
-			logger := &log.Logger{Logger: zap.NewNop()}
+			logger := &logging.Logger{Logger: zap.NewNop()}
 			manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 			require.NoError(t, err)
 			testDeleteReadOnlyFile(ctx, t, manager, dir)
@@ -752,7 +752,7 @@ func TestDeleteFile(t *testing.T) {
 func TestParseTimestamp(t *testing.T) {
 	t.Parallel()
 	// Setup
-	logger := &log.Logger{Logger: zap.NewNop()}
+	logger := &logging.Logger{Logger: zap.NewNop()}
 	dir := t.TempDir()
 	manager, err := NewManager(dir, testBackupPattern, WithLogger(logger))
 	require.NoError(t, err)
