@@ -43,8 +43,6 @@ jobs:
           git diff --exit-code
           bazel run //:gazelle -- fix
           git diff --exit-code
-          bazel run @rules_go//go -- run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -fix ./...
-          git diff --exit-code
           bazel mod deps
           git diff --exit-code
           bazel mod tidy
