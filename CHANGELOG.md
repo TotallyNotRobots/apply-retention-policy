@@ -1,3 +1,23 @@
+## v0.4.2 (2026-10-18)
+
+### Fix
+
+- **deps**: update module golang.org/x/sys to v0.49.0
+- **deps**: update module golang.org/x/sys to v0.48.0
+- **deps**: update module github.com/stretchr/testify to v1.12.1
+- **deps**: update module golang.org/x/sys to v0.47.0
+- **deps**: update module github.com/stretchr/testify to v1.12.0
+- **deps**: update module golang.org/x/sys to v0.45.0
+- **deps**: update module golang.org/x/sys to v0.44.0
+- **deps**: update module golang.org/x/sys to v0.43.0
+- **deps**: update module go.uber.org/zap to v1.28.0
+- **deps**: update module golang.org/x/sys to v0.39.0
+- **deps**: update module github.com/spf13/cobra to v1.10.2
+- **deps**: update module go.uber.org/zap to v1.27.1
+- **deps**: update module golang.org/x/sys to v0.38.0
+- **deps**: update module golang.org/x/sys to v0.37.0
+- **deps**: update module github.com/spf13/viper to v1.21.0
+
 ## v0.4.1 (2025-09-08)
 
 ### Fix
