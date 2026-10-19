@@ -1,3 +1,13 @@
+## v0.5.0 (2026-10-19)
+
+### Feat
+
+- **dev**: add integration for vscode+rules_go
+
+### Fix
+
+- **ci**: remove redundant modernize command, go fix does it now
+
 ## v0.4.2 (2026-10-18)
 
 ### Fix
